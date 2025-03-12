@@ -1,6 +1,3 @@
-create database elysia;
-use elysia;
-
 DROP TABLE IF EXISTS `elysia_user_info`;
 CREATE TABLE `elysia_user_info`
 (
