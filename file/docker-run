@@ -4,9 +4,7 @@ docker run --name nacos -p 8848:8848 -p 9848:9848 -p 9849:9849 -d --privileged=t
 docker run --name nacos -p 8848:8848 -p 9848:9848 -p 9849:9849 -d --privileged=true --restart=always -e PREFER_HOST_MODE=hostname -e MODE=standalone nacos/nacos-server
 
 docker run --name nacos1 -p 8848:8848 -p 9848:9848 -p 9849:9849 -d --privileged=true --restart=always -e PREFER_HOST_MODE=hostname -e SPRING_DATASOURCE_PLATFORM=mysql -e MYSQL_SERVICE_HOST=192.168.254.131 -e MYSQL_SERVICE_PORT=3306 -e MYSQL_SERVICE_DB_NAME=nacos_config -e MYSQL_SERVICE_USER=root -e MYSQL_SERVICE_PASSWORD=123456 -v /home/elysiakafka/nacos1/logs:/home/nacos/logs -v /home/elysiakafka/nacos1/init.d/custom.properties:/etc/nacos/init.d/custom.properties -v /home/elysiakafka/nacos1/data:/home/nacos/data -v /home/elysiakafka/nacos1/conf:/home/nacos/conf nacos/nacos-server
-
 docker run --name nacos2 -p 8868:8868 -p 9868:8868 -p 9869:8869 -d --privileged=true --restart=always -e PREFER_HOST_MODE=hostname -e SPRING_DATASOURCE_PLATFORM=mysql -e MYSQL_SERVICE_HOST=192.168.254.131 -e MYSQL_SERVICE_PORT=3306 -e MYSQL_SERVICE_DB_NAME=nacos_config -e MYSQL_SERVICE_USER=root -e MYSQL_SERVICE_PASSWORD=123456 -v /home/elysiakafka/nacos2/logs:/home/nacos/logs -v /home/elysiakafka/nacos2/init.d/custom.properties:/etc/nacos/init.d/custom.properties -v /home/elysiakafka/nacos2/data:/home/nacos/data -v /home/elysiakafka/nacos2/conf:/home/nacos/conf nacos/nacos-server
-
 docker run --name nacos3 -p 8888:8888 -p 9888:8888 -p 9889:8889 -d --privileged=true --restart=always -e PREFER_HOST_MODE=hostname -e SPRING_DATASOURCE_PLATFORM=mysql -e MYSQL_SERVICE_HOST=192.168.254.131 -e MYSQL_SERVICE_PORT=3306 -e MYSQL_SERVICE_DB_NAME=nacos_config -e MYSQL_SERVICE_USER=root -e MYSQL_SERVICE_PASSWORD=123456 -v /home/elysiakafka/nacos3/logs:/home/nacos/logs -v /home/elysiakafka/nacos3/init.d/custom.properties:/etc/nacos/init.d/custom.properties -v /home/elysiakafka/nacos3/data:/home/nacos/data -v /home/elysiakafka/nacos3/conf:/home/nacos/conf nacos/nacos-server
 
 docker run --name mysql -p 3306:3306 -d --restart=always -e MYSQL_ROOT_PASSWORD=123456 -v /home/elysiakafka/mysql/conf.d:/etc/mysql/conf.d -v /home/elysiakafka/mysql/data:/var/lib/mysql -v /home/elysiakafka/mysql/log:/var/log/mysql mysql
@@ -17,3 +15,6 @@ docker run --name nginx -p 80:80 -d --restart=always -v /home/elysiakafka/nginx/
 docker run --name nginx -p 80:80 -d --restart=always -v /home/elysiakafka/nginx/html:/usr/share/nginx/ nginx
 docker run --name nginx -p 80:80 -d --restart=always -v /home/elysiakafka/nginx/nginx.conf:/etc/nginx/nginx.conf nginx
 docker run --name nginx -p 80:80 -d --restart=always nginx
+
+docker run -d -p 8000:8000 -v ./config:/app/config -v ./uploads:/app/uploads --name sillytavern sillytavern
+docker run -d -p 8000:8000 -v $(pwd)/config:/app/config --name sillytavern sillytavern
