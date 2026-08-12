@@ -20,13 +20,11 @@ spring:
         password: ${hakira.nacos.password}
         namespace: public
         ephemeral: true #nacos注册服务提供方设置为非临时实例
-#消费者微服务名称（Nacos服务名）
-service-url:
-  nacos-user-service: http://hakira-ledger-entry-service
 #日志监控的指定接口输出级别设置
 logging:
   level:
-    com.hakira.market.api.order.StockTestService: debug
+    com.hakira.ledger.api.entry: debug
+    com.hakira.ledger.api.stock: debug
 # 激活Sentinel对OpenFeign的支持
 feign:
   sentinel:

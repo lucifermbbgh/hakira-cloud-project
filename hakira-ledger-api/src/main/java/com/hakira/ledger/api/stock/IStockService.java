@@ -1,29 +1,24 @@
 package com.hakira.ledger.api.stock;
 
+import com.hakira.ledger.api.dto.stock.StockMovementRequest;
+import com.hakira.ledger.api.dto.stock.StockMovementResponse;
+import com.hakira.ledger.api.dto.stock.StockSnapshotResponse;
+
+import java.util.List;
+
 /**
- * @BelongsProject: hakira
- * @BelongsPackage: com.hakira.service.order
- * @Author: hakiraKafka
- * @CreateTime: 2023-11-17  22:10:11
- * @Description: TODO
- * @Version: 1.0
+ * 库存台账服务接口
  */
 public interface IStockService {
-    /**
-     * @description:扣减库存
-     * @author: hakiraKafka
-     * @date: 2023/11/25 22:39
-     * @param: id
-     * @return: java.lang.String
-     **/
-    String reduceStock(String orderId);
+    /** 物资入库 */
+    StockMovementResponse recordInbound(StockMovementRequest request);
 
-    /**
-     * @description:增加库存
-     * @author: hakiraKafka
-     * @date: 2023/11/29 17:21
-     * @param: orderId
-     * @return: java.lang.String
-     **/
-    String addStock(String orderId);
+    /** 物资出库 */
+    StockMovementResponse recordOutbound(StockMovementRequest request);
+
+    /** 库存快照（当前库存量） */
+    StockSnapshotResponse getSnapshot(String itemCode);
+
+    /** 查询物资变动记录 */
+    List<StockMovementResponse> getMovements(String itemCode, String fromDate, String toDate);
 }

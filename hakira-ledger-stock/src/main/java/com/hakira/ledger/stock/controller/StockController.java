@@ -1,30 +1,43 @@
 package com.hakira.ledger.stock.controller;
 
 import com.hakira.common.pojo.common.Result;
+import com.hakira.ledger.api.dto.stock.StockMovementRequest;
+import com.hakira.ledger.api.dto.stock.StockMovementResponse;
+import com.hakira.ledger.api.dto.stock.StockSnapshotResponse;
 import com.hakira.ledger.api.stock.IStockService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
 
-/**
- * @BelongsProject: hakira
- * @BelongsPackage: com.hakira.ledger.stock.controller
- * @Author: hakiraKafka
- * @CreateTime: 2023-11-25  22:37:33
- * @Description: TODO
- * @Version: 1.0
- */
+import java.util.List;
+
 @RestController
 @RequestMapping("/stock")
+@Slf4j
+@RequiredArgsConstructor
 public class StockController {
-    @Autowired
-    private IStockService iStockService;
+    private final IStockService stockService;
 
-    @GetMapping("/reduce/{orderId}")
-    public Result<String> reduceStock(@PathVariable("orderId") String orderId) {
-        String result = iStockService.reduceStock(orderId);
-        return Result.returnSuccess(result);
+    @PostMapping("/inbound")
+    public Result<StockMovementResponse> inbound(@RequestBody StockMovementRequest request) {
+        return Result.returnSuccess(stockService.recordInbound(request));
+    }
+
+    @PostMapping("/outbound")
+    public Result<StockMovementResponse> outbound(@RequestBody StockMovementRequest request) {
+        return Result.returnSuccess(stockService.recordOutbound(request));
+    }
+
+    @GetMapping("/snapshot/{itemCode}")
+    public Result<StockSnapshotResponse> snapshot(@PathVariable String itemCode) {
+        return Result.returnSuccess(stockService.getSnapshot(itemCode));
+    }
+
+    @GetMapping("/movements/{itemCode}")
+    public Result<List<StockMovementResponse>> movements(
+            @PathVariable String itemCode,
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate) {
+        return Result.returnSuccess(stockService.getMovements(itemCode, fromDate, toDate));
     }
 }

@@ -27,19 +27,13 @@ spring:
       web-context-unify: false #配置为false即可根据不同的URL进行链路限流，如果不配置将不会生效
       flow:
         coldFactor: 3
-#消费者微服务名称（Nacos服务名）
-service-url:
-  nacos-user-service: http://hakira-ledger-stock-service
 #日志监控的指定接口输出级别设置
 logging:
   level:
-    com.hakira.market.api.order.StockTestService: debug
+    com.hakira.ledger.api.entry: debug
+    com.hakira.ledger.api.stock: debug
 # 激活Sentinel对OpenFeign的支持
 feign:
-  sentinel:
-    enabled: true
-# 激活Sentinel对RestTemplate的支持
-resttemplate:
   sentinel:
     enabled: true
 # rocketmq配置
