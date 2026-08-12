@@ -1,8 +1,0 @@
-spring:
-  profiles:
-    active: local
-  datasource:
-    url: jdbc:mysql://${hakira.db.host}/hakira
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${hakira.db.username}
-    password: ${hakira.db.password}

@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.hakira</groupId>
         <artifactId>hakira-parent</artifactId>
-        <version>2.0.4-RELEASE</version>
+        <version>3.0.0-SNAPSHOT</version>
     </parent>
     <groupId>com.elysiDa</groupId>
     <artifactId>hakira-fury</artifactId>

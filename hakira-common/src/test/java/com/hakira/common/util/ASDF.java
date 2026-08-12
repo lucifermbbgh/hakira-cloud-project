@@ -4,7 +4,7 @@ import java.util.Scanner;
 
 /**
  * @BelongsProject: hakira
- * @BelongsPackage: com.hakira.club.blog.service
+ * @BelongsPackage: com.hakira.common.util
  * @Author: hakiraKafka
  * @CreateTime: 2023-11-23  22:38:39
  * @Description: TODO

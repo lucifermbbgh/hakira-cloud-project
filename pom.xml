@@ -5,23 +5,24 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.hakira</groupId>
     <artifactId>hakira-parent</artifactId>
-    <version>2.0.4-RELEASE</version>
+    <version>3.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>hakira-parent</name>
     <description>spring cloud alibaba development</description>
     <modules>
         <module>hakira-common</module>
-        <module>hakira-club-api</module>
-        <module>hakira-club-article</module>
-        <module>hakira-club-blog</module>
-        <module>hakira-club-config</module>
-        <module>hakira-gate</module>
-        <module>hakira-market-config</module>
-        <module>hakira-market-api</module>
-        <module>hakira-market-order</module>
-        <module>hakira-market-stock</module>
         <module>hakira-fury</module>
-        <module>hakira-task</module>
+        <module>hakira-ledger-gateway</module>
+        <module>hakira-ledger-auth</module>
+        <module>hakira-ledger-api</module>
+        <module>hakira-ledger-entry</module>
+        <module>hakira-ledger-stock</module>
+        <module>hakira-ledger-config</module>
+        <module>hakira-ledger-mq</module>
+        <module>hakira-ledger-workflow</module>
+        <module>hakira-ledger-flink</module>
+        <module>hakira-ledger-spark</module>
+        <module>hakira-ledger-task</module>
     </modules>
 
     <properties>
@@ -39,9 +40,8 @@
         <mapper.version>4.2.3</mapper.version>
         <druid.version>1.1.20</druid.version>
         <rocketmq.version>2.2.3</rocketmq.version>
-        <hakira-common.version>2.0.4-RELEASE</hakira-common.version>
-        <hakira-club-api.version>2.0.4-RELEASE</hakira-club-api.version>
-        <hakira-market-api.version>2.0.4-RELEASE</hakira-market-api.version>
+        <hakira-common.version>3.0.0-SNAPSHOT</hakira-common.version>
+        <hakira-ledger-api.version>3.0.0-SNAPSHOT</hakira-ledger-api.version>
     </properties>
 
     <dependencyManagement>
@@ -116,16 +116,11 @@
                 <artifactId>hakira-common</artifactId>
                 <version>${hakira-common.version}</version>
             </dependency>
-            <!-- hakira-api -->
+            <!-- hakira-ledger-api -->
             <dependency>
                 <groupId>com.hakira</groupId>
-                <artifactId>hakira-club-api</artifactId>
-                <version>${hakira-club-api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hakira</groupId>
-                <artifactId>hakira-market-api</artifactId>
-                <version>${hakira-market-api.version}</version>
+                <artifactId>hakira-ledger-api</artifactId>
+                <version>${hakira-ledger-api.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

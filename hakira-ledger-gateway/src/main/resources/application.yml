@@ -1,0 +1,40 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: hakira-ledger-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: hakira-ledger-auth
+          uri: lb://hakira-ledger-auth
+          predicates:
+            - Path=/auth/**
+        - id: hakira-ledger-api
+          uri: lb://hakira-ledger-api
+          predicates:
+            - Path=/api/**
+        - id: hakira-ledger-entry
+          uri: lb://hakira-ledger-entry
+          predicates:
+            - Path=/entry/**
+        - id: hakira-ledger-stock
+          uri: lb://hakira-ledger-stock
+          predicates:
+            - Path=/stock/**
+        - id: hakira-ledger-config
+          uri: lb://hakira-ledger-config
+          predicates:
+            - Path=/config/**
+        - id: hakira-ledger-task
+          uri: lb://hakira-ledger-task
+          predicates:
+            - Path=/task/**
