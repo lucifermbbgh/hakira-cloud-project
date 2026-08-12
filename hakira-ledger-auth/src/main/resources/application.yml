@@ -25,3 +25,8 @@ mybatis-plus:
   configuration:
 #    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# JWT configuration (shared with gateway)
+jwt:
+  secret: hakira-ledger-jwt-secret-key-2024-must-be-at-least-256-bits-long
+  expiration: 86400000  # 24 hours in milliseconds
