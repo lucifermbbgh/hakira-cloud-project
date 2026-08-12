@@ -1,0 +1,15 @@
+hakira:
+  mq:
+    name-server: 127.0.0.1:9876
+    producer-group: hakira-ledger-producer
+    consumer-group: hakira-ledger-consumer
+    demo:
+      enabled: true
+
+spring:
+  profiles:
+    active: demo
+
+logging:
+  level:
+    com.hakira.ledger.mq: DEBUG
