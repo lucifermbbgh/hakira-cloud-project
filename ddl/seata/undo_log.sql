@@ -1,6 +1,6 @@
 -- 在业务数据库当中添加undo_log表用于seata做事务控制与提交
-USE `elysia`;
-CREATE TABLE IF NOT EXISTS elysia.undo_log
+USE `hakira`;
+CREATE TABLE IF NOT EXISTS hakira.undo_log
 (
     `branch_id`     BIGINT(20)   NOT NULL COMMENT 'branch transaction id',
     `xid`           VARCHAR(100) NOT NULL COMMENT 'global transaction id',

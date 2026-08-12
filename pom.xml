@@ -3,27 +3,25 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.elysia</groupId>
-    <artifactId>elysia-parent</artifactId>
+    <groupId>com.hakira</groupId>
+    <artifactId>hakira-parent</artifactId>
     <version>2.0.4-RELEASE</version>
     <packaging>pom</packaging>
-    <name>elysia-parent</name>
+    <name>hakira-parent</name>
     <description>spring cloud alibaba development</description>
     <modules>
-        <module>elysia-common</module>
-        <module>elysia-club-api</module>
-        <module>elysia-club-article</module>
-        <module>elysia-club-blog</module>
-        <module>elysia-club-config</module>
-        <module>elysia-club-gateway</module>
-        <module>elysia-gate</module>
-        <module>elysia-market-config</module>
-        <module>elysia-market-gateway</module>
-        <module>elysia-market-api</module>
-        <module>elysia-market-order</module>
-        <module>elysia-market-stock</module>
-        <module>elysia-fury</module>
-        <module>elysia-task</module>
+        <module>hakira-common</module>
+        <module>hakira-club-api</module>
+        <module>hakira-club-article</module>
+        <module>hakira-club-blog</module>
+        <module>hakira-club-config</module>
+        <module>hakira-gate</module>
+        <module>hakira-market-config</module>
+        <module>hakira-market-api</module>
+        <module>hakira-market-order</module>
+        <module>hakira-market-stock</module>
+        <module>hakira-fury</module>
+        <module>hakira-task</module>
     </modules>
 
     <properties>
@@ -41,9 +39,9 @@
         <mapper.version>4.2.3</mapper.version>
         <druid.version>1.1.20</druid.version>
         <rocketmq.version>2.2.3</rocketmq.version>
-        <elysia-common.version>2.0.4-RELEASE</elysia-common.version>
-        <elysia-club-api.version>2.0.4-RELEASE</elysia-club-api.version>
-        <elysia-market-api.version>2.0.4-RELEASE</elysia-market-api.version>
+        <hakira-common.version>2.0.4-RELEASE</hakira-common.version>
+        <hakira-club-api.version>2.0.4-RELEASE</hakira-club-api.version>
+        <hakira-market-api.version>2.0.4-RELEASE</hakira-market-api.version>
     </properties>
 
     <dependencyManagement>
@@ -112,22 +110,22 @@
                 <scope>test</scope>
             </dependency>
 
-            <!-- elysia-common -->
+            <!-- hakira-common -->
             <dependency>
-                <groupId>com.elysia</groupId>
-                <artifactId>elysia-common</artifactId>
-                <version>${elysia-common.version}</version>
+                <groupId>com.hakira</groupId>
+                <artifactId>hakira-common</artifactId>
+                <version>${hakira-common.version}</version>
             </dependency>
-            <!-- elysia-api -->
+            <!-- hakira-api -->
             <dependency>
-                <groupId>com.elysia</groupId>
-                <artifactId>elysia-club-api</artifactId>
-                <version>${elysia-club-api.version}</version>
+                <groupId>com.hakira</groupId>
+                <artifactId>hakira-club-api</artifactId>
+                <version>${hakira-club-api.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.elysia</groupId>
-                <artifactId>elysia-market-api</artifactId>
-                <version>${elysia-market-api.version}</version>
+                <groupId>com.hakira</groupId>
+                <artifactId>hakira-market-api</artifactId>
+                <version>${hakira-market-api.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

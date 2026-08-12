@@ -24,10 +24,10 @@ services:
       - "./mysql/init:/docker-entrypoint-initdb.d"
     #网络空间
     networks:
-      - elysia-net
+      - hakira-net
   #构建JAVA应用
-  elysia-core:
-    image: elysia-core
+  hakira-core:
+    image: hakira-core
     #build命令
     build:
       #构建路径
@@ -35,7 +35,7 @@ services:
       #构建脚本
       dockerfile: Dockerfile
     #容器名称
-    container_name: elysia-core
+    container_name: hakira-core
     #TOMCAT端口号映射
     ports:
       - "8080:8080"
@@ -46,7 +46,7 @@ services:
       - mysql
     #网络空间
     networks:
-      - elysia-net
+      - hakira-net
   #NGINX负载均衡代理
   nginx:
     #镜像名
@@ -64,10 +64,10 @@ services:
       - "./nginx/html:/usr/share/nginx/html"
     #依赖关系（依赖JAVA后端服务）
     depends_on:
-      - elysia-core
+      - hakira-core
     #网络空间
     networks:
-      - elysia-net
+      - hakira-net
   #Nacos注册中心
   nacos:
     #镜像名
@@ -102,11 +102,11 @@ services:
       - nginx
     #网络空间
     networks:
-      - elysia-net
+      - hakira-net
 #网络空间
 networks:
   #网络标识
-  elysia-net:
+  hakira-net:
     #网络名
-    name: elysia
+    name: hakira
 

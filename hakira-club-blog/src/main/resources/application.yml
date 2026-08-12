@@ -1,0 +1,20 @@
+server:
+  port: 8001
+spring:
+  application:
+    name: hakira-club-blog-service
+  profiles:
+    default: dev
+  datasource:
+    url: jdbc:mysql://${hakira.db.host}/hakira
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${hakira.db.username}
+    password: ${hakira.db.password}
+  cloud:
+    nacos:
+      server-addr: ${hakira.nacos.host}
+      discovery:
+        username: ${hakira.nacos.username}
+        password: ${hakira.nacos.password}
+        namespace: public
+        ephemeral: true #nacos注册服务提供方设置为非临时实例

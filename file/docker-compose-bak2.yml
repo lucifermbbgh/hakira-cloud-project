@@ -24,7 +24,7 @@ services:
       - "./mysql/init:/docker-entrypoint-initdb.d"
     #网络空间
     networks:
-      - elysia-net
+      - hakira-net
   #NGINX负载均衡代理
   nginx:
     #镜像名
@@ -45,7 +45,7 @@ services:
       - mysql
     #网络空间
     networks:
-      - elysia-net
+      - hakira-net
   #Nacos注册中心
   nacos1:
     #镜像名
@@ -82,7 +82,7 @@ services:
       - nginx
     #网络空间
     networks:
-      - elysia-net
+      - hakira-net
   #Nacos注册中心
   nacos2:
     #镜像名
@@ -118,7 +118,7 @@ services:
       - nginx
     #网络空间
     networks:
-      - elysia-net
+      - hakira-net
   #Nacos注册中心
   nacos3:
     #镜像名
@@ -154,11 +154,11 @@ services:
       - nginx
     #网络空间
     networks:
-      - elysia-net
+      - hakira-net
 #网络空间
 networks:
   #网络标识
-  elysia-net:
+  hakira-net:
     #网络名
-    name: elysia
+    name: hakira
 
