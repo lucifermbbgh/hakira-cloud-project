@@ -1,6 +1,0 @@
-#####NACOS CONFIG#####
-elysia:
-  nacos:
-    host: 192.168.17.133:8848
-    username: nacos
-    password: nacos

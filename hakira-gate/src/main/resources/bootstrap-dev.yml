@@ -1,0 +1,6 @@
+#####NACOS CONFIG#####
+hakira:
+  nacos:
+    host: 192.168.17.133:8848
+    username: nacos
+    password: nacos

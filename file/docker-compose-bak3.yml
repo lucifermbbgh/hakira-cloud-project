@@ -1,0 +1,42 @@
+#版本
+version: "3.8"
+#服务
+services:
+  mysql:
+    #镜像
+    image: mysql
+    #容器名称
+    container_name: mysql
+    #映射端口
+    ports:
+      - "3306:3306"
+    #跟随docker自动启动重启
+    restart: always
+    #环境参数
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      TZ: Asia/Shanghai
+    #数据卷
+    volumes:
+      - "./mysql/conf:/etc/mysql"
+      - "./mysql/data:/var/lib/mysql"
+      - "./mysql/log:/var/log/mysql"
+      - "./mysql/init:/docker-entrypoint-initdb.d"
+  #NGINX负载均衡代理
+  nginx:
+    #镜像名
+    image: nginx
+    #容器名
+    container_name: nginx
+    #映射端口
+    ports:
+      - "80:80"
+    #跟随docker自动启动重启
+    restart: always
+    #数据卷
+    volumes:
+      - "./nginx/nginx.conf:/etc/nginx/nginx.conf"
+      - "./nginx/html:/usr/share/nginx/html"
+    #依赖关系（依赖JAVA后端服务）
+    depends_on:
+      - mysql

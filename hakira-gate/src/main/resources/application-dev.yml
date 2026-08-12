@@ -1,0 +1,8 @@
+#####MYSQL CONNECT CONFIG#####
+hakira:
+  db:
+    host: mysql
+    username: root
+    password: 123456
+  redis:
+    host: redis

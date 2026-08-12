@@ -1,4 +1,4 @@
-# Elysia：spring-cloud-alibaba学习项目
+# hakira：spring-cloud-alibaba学习项目
 
 ## 项目简介
 基于spring-cloud-alibaba的微服务项目，主要是学习spring-cloud-alibaba的各个组件，以及spring-cloud-alibaba的整合。
@@ -6,18 +6,18 @@
 ## 项目结构
 ```json5
 {
-  "elysia-market-parent": {
+  "hakira-market-parent": {
     "java.version": "17",
     "spring.boot.version": "3.2.0",
     "spring-cloud.version": "2023.0.0",
     "spring-cloud-alibaba.version": "2022.0.0.0-RC2",
     "mysql": "8.0.11",
     "packages": {
-      "elysia-market-config": "",
-      "elysia-market-gateway": "",
-      "elysia-market-api": "",
-      "elysia-market-order": "",
-      "elysia-market-stock": ""
+      "hakira-market-config": "",
+      "hakira-market-gateway": "",
+      "hakira-market-api": "",
+      "hakira-market-order": "",
+      "hakira-market-stock": ""
     },
   }
 }

@@ -1,0 +1,6 @@
+#####MYSQL CONNECT CONFIG#####
+hakira:
+  db:
+    host: localhost
+    username: root
+    password: root

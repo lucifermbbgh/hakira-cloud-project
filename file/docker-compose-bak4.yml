@@ -1,0 +1,188 @@
+#版本
+version: "3.8"
+#服务
+services:
+  mysql:
+    #镜像
+    image: mysql
+    #容器名称
+    container_name: mysql
+    #映射端口
+    ports:
+      - "3306:3306"
+    #跟随docker自动启动重启
+    restart: always
+    #环境参数
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      TZ: Asia/Shanghai
+    #数据卷
+    volumes:
+      - "/home/hakirakafka/mysql/conf.d:/etc/mysql/conf.d"
+      - "/home/hakirakafka/mysql/data:/var/lib/mysql"
+      - "/home/hakirakafka/mysql/log:/var/log/mysql"
+    #网络空间
+    networks:
+      - hakira-net
+  #NGINX负载均衡代理
+  nginx:
+    #镜像名
+    image: nginx
+    #容器名
+    container_name: nginx
+    #映射端口
+    ports:
+      - "80:80"
+    #跟随docker自动启动重启
+    restart: always
+    #数据卷
+    volumes:
+      - "/home/hakirakafka/nginx/nginx.conf:/etc/nginx/nginx.conf"
+      - "/home/hakirakafka/nginx/conf.d/:/etc/nginx/conf.d/"
+      - "/home/hakirakafka/nginx/html:/usr/share/nginx/"
+    #依赖关系（依赖JAVA后端服务）
+    depends_on:
+      - mysql
+    #网络空间
+    networks:
+      - hakira-net
+  #Nacos注册中心
+  nacos1:
+    #镜像名
+    image: nacos/nacos-server
+    #容器名
+    container_name: nacos1
+    #主机名
+    hostname: nacos1
+    #映射端口
+    #7848：Nacos服务的HTTP API端口，用于处理服务发现、配置管理、命名服务等功能。
+    #8848：Nacos服务的HTTP UI端口，用于访问控制台和服务端监控页面。
+    #9848：Nacos服务的NETTY HTTP端口，用于处理HTTP请求
+    #9849：Nacos服务的NETTY TCP端口，用于处理TCP请求
+    ports:
+      - "7848:7848"
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+    #跟随docker自动启动重启
+    restart: always
+    #容器的特权模式
+    privileged: true
+    #环境参数
+    environment:
+      MODE: cluster
+      PREFER_HOST_MODE: hostname
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_DATABASE_NUM: 1
+      MYSQL_SERVICE_HOST: mysql
+      MYSQL_SERVICE_PORT: 3306
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: 123456
+      MYSQL_SERVICE_DB_NAME: nacos_config
+      MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=UTC
+    #数据卷
+    volumes:
+      - "/home/hakirakafka/nacos1/data:/home/nacos/data"
+      - "/home/hakirakafka/nacos1/logs:/home/nacos/logs"
+      - "/home/hakirakafka/nacos1/conf:/home/nacos/conf"
+      - "/home/hakirakafka/nacos1/init.d/custom.properties:/etc/nacos/init.d/custom.properties"
+    #依赖关系（依赖NGINX负载均衡）
+    depends_on:
+      - nginx
+    #网络空间
+    networks:
+      - hakira-net
+  #Nacos注册中心
+  nacos2:
+    #镜像名
+    image: nacos/nacos-server
+    #容器名
+    container_name: nacos2
+    #映射端口
+    #7848：Nacos服务的HTTP API端口，用于处理服务发现、配置管理、命名服务等功能。
+    #8848：Nacos服务的HTTP UI端口，用于访问控制台和服务端监控页面。
+    #9848：Nacos服务的NETTY HTTP端口，用于处理HTTP请求
+    #9849：Nacos服务的NETTY TCP端口，用于处理TCP请求
+    ports:
+      - "7868:7868"
+      - "8868:8868"
+      - "9868:9868"
+      - "9869:9869"
+    #跟随docker自动启动重启
+    restart: always
+    #容器的特权模式
+    privileged: true
+    #环境参数
+    environment:
+      MODE: cluster
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_DATABASE_NUM: 1
+      MYSQL_SERVICE_HOST: mysql
+      MYSQL_SERVICE_PORT: 3306
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: 123456
+      MYSQL_SERVICE_DB_NAME: nacos_config
+      MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=UTC
+    #数据卷
+    volumes:
+      - "/home/hakirakafka/nacos2/data:/home/nacos/data"
+      - "/home/hakirakafka/nacos2/logs:/home/nacos/logs"
+      - "/home/hakirakafka/nacos2/conf:/home/nacos/conf"
+      - "/home/hakirakafka/nacos2/init.d/custom.properties:/etc/nacos/init.d/custom.properties"
+    #依赖关系（依赖NGINX负载均衡）
+    depends_on:
+      - nginx
+    #网络空间
+    networks:
+      - hakira-net
+  #Nacos注册中心
+  nacos3:
+    #镜像名
+    image: nacos/nacos-server
+    #容器名
+    container_name: nacos3
+    #映射端口
+    #7848：Nacos服务的HTTP API端口，用于处理服务发现、配置管理、命名服务等功能。
+    #8848：Nacos服务的HTTP UI端口，用于访问控制台和服务端监控页面。
+    #9848：Nacos服务的NETTY HTTP端口，用于处理HTTP请求
+    #9849：Nacos服务的NETTY TCP端口，用于处理TCP请求
+    ports:
+      -
+      - "7888:7888"
+      - "8888:8888"
+      - "9888:9888"
+      - "9889:9889"
+    #跟随docker自动启动重启
+    restart: always
+    #容器的特权模式
+    privileged: true
+    #环境参数
+    environment:
+      MODE: cluster
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_DATABASE_NUM: 1
+      MYSQL_SERVICE_HOST: mysql
+      MYSQL_SERVICE_PORT: 3306
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: 123456
+      MYSQL_SERVICE_DB_NAME: nacos_config
+      MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=UTC
+    #数据卷
+    volumes:
+      - "/home/hakirakafka/nacos3/data:/home/nacos/data"
+      - "/home/hakirakafka/nacos3/logs:/home/nacos/logs"
+      - "/home/hakirakafka/nacos3/conf:/home/nacos/conf"
+      - "/home/hakirakafka/nacos3/init.d/custom.properties:/etc/nacos/init.d/custom.properties"
+    #依赖关系（依赖NGINX负载均衡）
+    depends_on:
+      - nginx
+    #网络空间
+    networks:
+      - hakira-net
+#网络空间
+networks:
+  #网络标识
+  hakira-net:
+    #网络名
+    name: hakira
+
