@@ -52,11 +52,20 @@ spring:
             - Path=/config/**
           filters:
             - JwtAuth
+        # Workflow API
+        - id: workflow-api
+          uri: lb://hakira-ledger-workflow
+          predicates:
+            - Path=/workflow/**
+          filters:
+            - JwtAuth
         # Task API
-        - id: task-api
+        - id: task-api-route
           uri: lb://hakira-ledger-task
           predicates:
             - Path=/task/**
+          filters:
+            - JwtAuth
 
 # JWT configuration (for gateway validation)
 jwt:

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:flowable="http://flowable.org/bpmn"
+             targetNamespace="http://flowable.org/bpmn">
+  <process id="ledger-entry-approval" name="账务分录审批流程" isExecutable="true">
+    <startEvent id="start" name="开始"/>
+    <serviceTask id="validateEntry" name="账务校验" 
+                 flowable:delegateExpression="${ledgerValidationDelegate}"/>
+    <userTask id="managerApprove" name="主管审批" 
+              flowable:candidateGroups="manager"/>
+    <exclusiveGateway id="gateway" name="审批结果"/>
+    <serviceTask id="autoSign" name="自动签字" 
+                 flowable:delegateExpression="${autoSignDelegate}"/>
+    <userTask id="revise" name="退回修改" 
+              flowable:assignee="${initiator}"/>
+    <endEvent id="end" name="结束"/>
+    <!-- flows -->
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="validateEntry"/>
+    <sequenceFlow id="flow2" sourceRef="validateEntry" targetRef="managerApprove"/>
+    <sequenceFlow id="flow3" sourceRef="managerApprove" targetRef="gateway"/>
+    <sequenceFlow id="flow4" sourceRef="gateway" targetRef="autoSign">
+      <conditionExpression>${approved}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow5" sourceRef="gateway" targetRef="revise">
+      <conditionExpression>${!approved}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow6" sourceRef="autoSign" targetRef="end"/>
+    <sequenceFlow id="flow7" sourceRef="revise" targetRef="managerApprove"/>
+  </process>
+</definitions>
