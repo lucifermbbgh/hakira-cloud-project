@@ -74,3 +74,6 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Nacos 连 MySQL 调试中间产物（最终方案用内置存储，含明文凭据不入库）
+file/nacos-application.properties
