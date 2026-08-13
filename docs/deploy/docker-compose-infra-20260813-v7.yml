@@ -2,7 +2,6 @@
 # hakira-cloud-project 基础设施部署
 # MySQL (账本专用) + Nacos (注册中心/配置中心，内置存储)
 # ============================================================
-version: "3.8"
 
 services:
   # ==================== MySQL ====================
@@ -38,6 +37,7 @@ services:
     ports:
       - "8848:8848"
       - "9848:9848"
+      - "8088:8080"
     environment:
       MODE: standalone
       NACOS_AUTH_ENABLE: "false"
