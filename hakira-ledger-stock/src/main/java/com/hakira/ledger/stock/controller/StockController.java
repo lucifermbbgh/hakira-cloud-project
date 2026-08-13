@@ -29,15 +29,15 @@ public class StockController {
     }
 
     @GetMapping("/snapshot/{itemCode}")
-    public Result<StockSnapshotResponse> snapshot(@PathVariable String itemCode) {
+    public Result<StockSnapshotResponse> snapshot(@PathVariable("itemCode") String itemCode) {
         return Result.returnSuccess(stockService.getSnapshot(itemCode));
     }
 
     @GetMapping("/movements/{itemCode}")
     public Result<List<StockMovementResponse>> movements(
-            @PathVariable String itemCode,
-            @RequestParam(required = false) String fromDate,
-            @RequestParam(required = false) String toDate) {
+            @PathVariable("itemCode") String itemCode,
+            @RequestParam(value = "fromDate", required = false) String fromDate,
+            @RequestParam(value = "toDate", required = false) String toDate) {
         return Result.returnSuccess(stockService.getMovements(itemCode, fromDate, toDate));
     }
 }

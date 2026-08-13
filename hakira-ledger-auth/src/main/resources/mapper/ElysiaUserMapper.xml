@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.hakira.gate.mapper.hakiraUserMapper"> <!-- namespace应与接口全限定名一致 -->
+<mapper namespace="com.hakira.ledger.auth.mapper.HakiraUserMapper"> <!-- namespace应与接口全限定名一致 -->
 
     <!-- 更复杂的查询可能需要使用resultMap来描述结果集的映射关系 -->
-    <resultMap id="userResultMap" type="com.hakira.gate.pojo.dao.hakiraUser">
+    <resultMap id="userResultMap" type="com.hakira.ledger.auth.pojo.dao.HakiraUser">
         <id property="id" column="user_id"/>
         <result property="username" column="username"/>
         <result property="password" column="password"/>
@@ -42,7 +42,7 @@
     </delete>
 
     <!-- 查询用户示例 -->
-    <select id="findUserById" resultType="com.hakira.gate.pojo.dao.hakiraUser">
+    <select id="findUserById" resultType="com.hakira.ledger.auth.pojo.dao.HakiraUser">
         SELECT *
         FROM hakira_user
         WHERE id = #{id}

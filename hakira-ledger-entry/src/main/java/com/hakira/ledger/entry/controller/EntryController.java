@@ -26,7 +26,7 @@ public class EntryController {
     }
 
     @GetMapping("/{entryId}")
-    public Result<JournalEntryResponse> getEntry(@PathVariable String entryId) {
+    public Result<JournalEntryResponse> getEntry(@PathVariable("entryId") String entryId) {
         return Result.returnSuccess(entryService.getEntry(entryId));
     }
 
