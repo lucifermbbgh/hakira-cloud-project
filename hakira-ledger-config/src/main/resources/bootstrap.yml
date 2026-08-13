@@ -3,7 +3,7 @@ server:
   port: 3377
 spring:
   application:
-    name: hakira-config
+    name: hakira-ledger-config
   profiles:
     default: local
   cloud:

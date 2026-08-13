@@ -1,10 +1,8 @@
 server:
-  port: 8001
-  servlet:
-    context-path: /ledger-entry
+  port: 9020
 spring:
   application:
-    name: hakira-ledger-entry-service
+    name: hakira-ledger-entry
   profiles:
     default: local
   cloud:

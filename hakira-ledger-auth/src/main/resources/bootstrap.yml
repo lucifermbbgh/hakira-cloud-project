@@ -1,13 +1,13 @@
 #Nacos-config配置
 spring:
   application:
-    name: hakira-ledger-auth-service
+    name: hakira-ledger-auth
   profiles:
     default: local
   cloud:
     nacos:
       discovery:
-        register-enabled: false
+        register-enabled: true
         server-addr: ${hakira.nacos.host} #Nacos注册中心地址
         username: ${hakira.nacos.username}
         password: ${hakira.nacos.password}

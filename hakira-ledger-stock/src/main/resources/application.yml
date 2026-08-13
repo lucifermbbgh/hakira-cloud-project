@@ -1,10 +1,8 @@
 server:
-  port: 8002
-  servlet:
-    context-path: /ledger-stock
+  port: 9030
 spring:
   application:
-    name: hakira-ledger-stock-service
+    name: hakira-ledger-stock
   profiles:
     default: local
   cloud:
