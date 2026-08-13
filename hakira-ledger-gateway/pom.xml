@@ -76,6 +76,7 @@
                 <version>${spring.boot.version}</version>
                 <configuration>
                     <mainClass>com.hakira.ledger.gateway.HakiraLedgerGatewayApplication</mainClass>
+                    <skip>false</skip>
                 </configuration>
                 <executions>
                     <execution>

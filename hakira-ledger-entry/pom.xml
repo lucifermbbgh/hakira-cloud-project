@@ -86,7 +86,7 @@
                 <version>${spring.boot.version}</version>
                 <configuration>
                     <mainClass>com.hakira.ledger.entry.HakiraLedgerEntryApplication</mainClass>
-                    <skip>true</skip>
+                    <skip>false</skip>
                 </configuration>
                 <executions>
                     <execution>

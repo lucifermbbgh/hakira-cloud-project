@@ -86,6 +86,7 @@
                 <version>${spring.boot.version}</version>
                 <configuration>
                     <mainClass>com.hakira.ledger.stock.HakiraLedgerStockApplication</mainClass>
+                    <skip>false</skip>
                 </configuration>
                 <executions>
                     <execution>
