@@ -207,23 +207,37 @@ gateway 校验 JWT → 放行/401
 
 ## 6. 分阶段实施路线
 
+> 完整路线图（含依赖关系、阶段目标、关键任务拆解）见 [ROADMAP.md](ROADMAP.md)。
+
+### 6.1 已完成（Phase 1-5）
+
 ```
 Phase 1 ── 模块架构重构（market→ledger）                  ✅ 已完成
-           │  gateway+auth 分离、RocketMQ 独立、JWT 认证
 Phase 2 ── 会计复式记账核心业务（ledger-core）             ✅ 已完成
-           │  分录/库存/复式记账业务逻辑
 Phase 3 ── 审批流与批处理（Flowable + Quartz + Batch）     ✅ 已完成
-           │  工作流审批 + 定时对账批处理
 Phase 4 ── 基础设施部署与冒烟测试（MySQL + Nacos）         ✅ 已完成
-           │  容器化部署 + 14 项冒烟测试
-Phase 5 ── 数据持久化与安全优化                            ✅ 已完成
-           │  异常处理器 + BCrypt + 内存换 DB（分区表）
-Phase 6 ── 大数据分析层（Flink + Spark）                   📋 规划中
-              └─ 流式/批式分析会计流水（DB 已具备数据源）
+Phase 5 ── 数据持久化与安全优化（异常处理器+BCrypt+DB）     ✅ 已完成
 ```
 
-> 详细设计见各 Phase 的 `PHASE-N-*-DESIGN.md` / `-DETAILED-DESIGN.md`，
-> 测试见 `PHASE-N-*-TEST-REPORT.md`。
+### 6.2 待开发（Phase 6-16 · 会计业务深化）
+
+```
+Phase 6  ── 大数据分析层（Flink + Spark）                 📋 待开始
+Phase 7  ── 会计科目与辅助核算体系                        📋 待开始
+Phase 8  ── 凭证管理深化（审核/冲销/红字）                 📋 待开始
+Phase 9  ── 期末结账与账务结转                            📋 待开始
+Phase 10 ── 财务报表体系（三大报表）                       📋 待开始
+Phase 11 ── 成本核算                                     📋 待开始
+Phase 12 ── 固定资产管理                                  📋 待开始
+Phase 13 ── 应收应付与往来账龄                            📋 待开始
+Phase 14 ── 存货核算与计价                                📋 待开始
+Phase 15 ── 预算管理                                     📋 待开始
+Phase 16 ── 审计合规与系统治理                            📋 待开始
+```
+
+> 前端另开 `hakira-ledger-web` 项目实现，不在本路线内。
+
+> 各阶段设计/详细设计/测试文档命名：`PHASE-N-主题-DESIGN.md` / `-DETAILED-DESIGN.md` / `-TEST-REPORT.md`。
 
 ---
 
