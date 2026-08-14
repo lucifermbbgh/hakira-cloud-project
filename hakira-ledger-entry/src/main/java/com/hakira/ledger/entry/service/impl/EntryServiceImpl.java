@@ -8,6 +8,8 @@ import com.hakira.ledger.api.dto.entry.JournalEntryRequest;
 import com.hakira.ledger.api.dto.entry.JournalEntryResponse;
 import com.hakira.ledger.api.entry.IEntryService;
 import com.hakira.ledger.entry.mapper.AccountSubjectMapper;
+import com.hakira.ledger.entry.mapper.AuxiliaryMapper;
+import com.hakira.ledger.entry.mapper.JournalEntryLineAuxMapper;
 import com.hakira.ledger.entry.mapper.JournalEntryLineMapper;
 import com.hakira.ledger.entry.mapper.JournalEntryMapper;
 import com.hakira.ledger.entry.pojo.JournalEntry;
@@ -39,6 +41,8 @@ public class EntryServiceImpl implements IEntryService {
     private final JournalEntryMapper journalEntryMapper;
     private final JournalEntryLineMapper journalEntryLineMapper;
     private final AccountSubjectMapper accountSubjectMapper;
+    private final JournalEntryLineAuxMapper journalEntryLineAuxMapper;
+    private final AuxiliaryMapper auxiliaryMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -96,6 +100,8 @@ public class EntryServiceImpl implements IEntryService {
             line.setCreditAmount(e.getCreditAmount());
             journalEntryLineMapper.insert(line);
             lines.add(line);
+            // 写入辅助核算维度关联（校验维度与值合法性）
+            writeAux(line.getLineId(), e.getAux());
         }
 
         log.info("记账成功: entryId={}, voucherNo={}, 借方={}, 贷方={}",
@@ -152,5 +158,22 @@ public class EntryServiceImpl implements IEntryService {
             return LocalDate.now();
         }
         return LocalDate.parse(dateStr, DATE_FORMATTER);
+    }
+
+    /** 写入分录行辅助核算维度（校验维度与值合法性，Phase 7） */
+    private void writeAux(Long lineId, List<JournalEntryRequest.AuxEntry> auxList) {
+        if (auxList == null || auxList.isEmpty()) {
+            return;
+        }
+        for (JournalEntryRequest.AuxEntry aux : auxList) {
+            if (auxiliaryMapper.countActiveDimension(aux.getDimensionCode()) == 0) {
+                throw new BizException(BizErrorCode.AUX_DIMENSION_NOT_FOUND, aux.getDimensionCode());
+            }
+            if (auxiliaryMapper.countActiveValue(aux.getDimensionCode(), aux.getValueCode()) == 0) {
+                throw new BizException(BizErrorCode.AUX_VALUE_NOT_FOUND,
+                        aux.getDimensionCode() + "/" + aux.getValueCode());
+            }
+            journalEntryLineAuxMapper.insert(lineId, aux.getDimensionCode(), aux.getValueCode());
+        }
     }
 }

@@ -27,5 +27,16 @@ public class JournalEntryRequest {
         private BigDecimal debitAmount;
         /** 贷方金额 */
         private BigDecimal creditAmount;
+        /** 辅助核算维度列表（可选，如部门/项目/客户/供应商/现金流量） */
+        private List<AuxEntry> aux;
+    }
+
+    /** 辅助核算维度项 */
+    @Data
+    public static class AuxEntry {
+        /** 维度编码（如 DEPT/PROJECT/CUSTOMER/SUPPLIER/CASH_FLOW） */
+        private String dimensionCode;
+        /** 维度值编码（如 D001/P001） */
+        private String valueCode;
     }
 }

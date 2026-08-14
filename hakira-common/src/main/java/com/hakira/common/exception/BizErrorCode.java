@@ -34,6 +34,12 @@ public enum BizErrorCode {
     /** 数据已被修改（乐观锁冲突） */
     DATA_VERSION_CONFLICT("1005", "数据已被修改，请刷新后重试"),
 
+    /** 辅助核算维度不存在 */
+    AUX_DIMENSION_NOT_FOUND("1006", "辅助核算维度不存在"),
+
+    /** 辅助核算维度值不存在 */
+    AUX_VALUE_NOT_FOUND("1007", "辅助核算维度值不存在"),
+
     /** 系统未知异常 */
     SYSTEM_ERROR("88888", "系统异常，请联系管理员"),
 
