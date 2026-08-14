@@ -5,6 +5,11 @@ spring:
     name: hakira-ledger-stock
   profiles:
     default: local
+  datasource:
+    url: jdbc:mysql://${hakira.db.host}/hakira_ledger?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${hakira.db.username}
+    password: ${hakira.db.password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   cloud:
     nacos:
       server-addr: ${hakira.nacos.host}
@@ -27,3 +32,8 @@ management:
     web:
       exposure:
         include: '*'
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
