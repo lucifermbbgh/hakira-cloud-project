@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
@@ -74,14 +74,14 @@ public class WebSecurityConfig {
     }
 
     /**
-     * @description: 密码编码器（冒烟测试用明文匹配，生产应换 BCrypt）
+     * @description: 密码编码器（BCrypt 哈希，生产安全）
      * @author: hakiraKafka
-     * @date: 2026/8/13
+     * @date: 2026/8/14
      * @return: org.springframework.security.crypto.password.PasswordEncoder
      **/
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
 
     /**

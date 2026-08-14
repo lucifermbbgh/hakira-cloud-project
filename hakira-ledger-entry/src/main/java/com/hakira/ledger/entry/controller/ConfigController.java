@@ -4,8 +4,6 @@ import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.hakira.common.exception.ServiceFailException;
 import com.hakira.common.pojo.common.Result;
-import com.hakira.ledger.entry.handler.BlockExceptionHandler;
-import com.hakira.ledger.entry.handler.FallbackExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,8 +45,6 @@ public class ConfigController {
 
     @GetMapping("/info1")
     @SentinelResource(value = "sentinel.info",
-            blockHandlerClass = BlockExceptionHandler.class, blockHandler = "handler1",
-            fallbackClass = FallbackExceptionHandler.class, fallback = "handler1",
             exceptionsToIgnore = {NullPointerException.class})
     public Result<String> getOrderInfo1() {
         return Result.returnSuccess("查询成功！端口号：" + serverPort);
@@ -56,8 +52,6 @@ public class ConfigController {
 
     @GetMapping("/info2")
     @SentinelResource(value = "sentinel.info",
-            blockHandlerClass = BlockExceptionHandler.class, blockHandler = "handler2",
-            fallbackClass = FallbackExceptionHandler.class, fallback = "handler2",
             exceptionsToIgnore = {NullPointerException.class})
     public Result<String> getOrderInfo2(String orderId) throws Exception {
         if (StringUtils.equals(orderId, "123")) {
@@ -70,13 +64,13 @@ public class ConfigController {
     }
 
     @GetMapping("/testHandler1")
-    @SentinelResource(value = "testHandler1", blockHandlerClass = BlockExceptionHandler.class, blockHandler = "handler1")
+    @SentinelResource(value = "testHandler1")
     public Result<String> testHandler1() {
         return Result.returnSuccess("123456789");
     }
 
     @GetMapping("/testHandler2")
-    @SentinelResource(value = "testHandler2", blockHandlerClass = BlockExceptionHandler.class, blockHandler = "handler2")
+    @SentinelResource(value = "testHandler2")
     public Result<String> testHandler2(String id) {
         return Result.returnSuccess(id);
     }

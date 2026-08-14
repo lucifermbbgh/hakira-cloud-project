@@ -1,5 +1,7 @@
 package com.hakira.ledger.stock.service;
 
+import com.hakira.common.exception.BizErrorCode;
+import com.hakira.common.exception.BizException;
 import com.hakira.common.util.IdGeneratorUtil;
 import com.hakira.ledger.api.dto.stock.StockMovementRequest;
 import com.hakira.ledger.api.dto.stock.StockMovementResponse;
@@ -67,8 +69,8 @@ public class StockServiceImpl implements IStockService {
         // 检查库存是否足够
         BigDecimal current = stockSnapshot.getOrDefault(request.getItemCode(), BigDecimal.ZERO);
         if (current.compareTo(request.getQuantity()) < 0) {
-            throw new IllegalArgumentException(
-                    String.format("库存不足: itemCode=%s, 当前库存=%s, 申请出库=%s",
+            throw new BizException(BizErrorCode.STOCK_INSUFFICIENT,
+                    String.format("itemCode=%s, 当前库存=%s, 申请出库=%s",
                             request.getItemCode(), current, request.getQuantity()));
         }
 

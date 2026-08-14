@@ -25,6 +25,6 @@ CREATE TABLE IF NOT EXISTS `hakira_user` (
   COLLATE = utf8mb4_unicode_ci
   ROW_FORMAT = Dynamic;
 
--- 预置测试用户（密码为明文，供未来 DBUserManager 切换后使用）
+-- 预置测试用户（密码为 BCrypt 哈希，对应明文 admin123）
 INSERT INTO `hakira_user` (`ID`, `USERNAME`, `PASSWORD`, `STATUS`, `REGISTRATION_DATE`)
-VALUES ('1', 'admin', 'admin123', 1, '2026-08-13');
+VALUES ('1', 'admin', '$2a$10$73kpGgLjFUucG.Ua7V2N/.f5dIuFRTYNqC3vzD5bJmRunIKTaw/.K', 1, '2026-08-13');

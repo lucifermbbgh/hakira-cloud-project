@@ -1,5 +1,7 @@
 package com.hakira.ledger.entry.service.impl;
 
+import com.hakira.common.exception.BizErrorCode;
+import com.hakira.common.exception.BizException;
 import com.hakira.common.util.IdGeneratorUtil;
 import com.hakira.ledger.api.dto.entry.JournalEntryRequest;
 import com.hakira.ledger.api.dto.entry.JournalEntryResponse;
@@ -38,8 +40,8 @@ public class EntryServiceImpl implements IEntryService {
         }
 
         if (totalDebit.compareTo(totalCredit) != 0) {
-            throw new IllegalArgumentException(
-                    String.format("借贷不平衡: 借方=%s, 贷方=%s", totalDebit, totalCredit));
+            throw new BizException(BizErrorCode.ENTRY_UNBALANCED,
+                    String.format("借方=%s, 贷方=%s", totalDebit, totalCredit));
         }
 
         // 2. 生成分录ID
@@ -78,7 +80,7 @@ public class EntryServiceImpl implements IEntryService {
     public JournalEntryResponse getEntry(String entryId) {
         JournalEntryResponse response = store.get(entryId);
         if (response == null) {
-            throw new IllegalArgumentException("分录不存在: " + entryId);
+            throw new BizException(BizErrorCode.ENTRY_NOT_FOUND, entryId);
         }
         return response;
     }
