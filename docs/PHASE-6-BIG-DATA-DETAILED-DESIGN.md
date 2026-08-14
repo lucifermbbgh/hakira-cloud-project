@@ -109,6 +109,26 @@ docker exec hakira_ledger_flink_jobmanager flink run \
 | Spark Master + Worker 注册 | ✅ aliveworkers=1, cores=2 |
 | Spark SparkPi 作业 | ✅ Pi=3.1426 |
 
+### 4.1 自定义分析作业验证（真实会计数据）
+
+**Spark 对账作业**（pyspark，读 MySQL 校验借贷平衡）：
+
+| 项 | 结果 |
+|----|------|
+| 作业 | `reconciliation.py`，spark-submit + mysql-connector-j |
+| 数据源 | `journal_entry` 表（2 条分录） |
+| 结果 | 总分录 2，平衡 2，不平衡 0 ✅ |
+| 关键坑 | 需显式指定驱动：`.option("driver", "com.mysql.cj.jdbc.Driver")` |
+
+**Flink 流式作业**（SocketWindowWordCount，实时流式统计）：
+
+| 项 | 结果 |
+|----|------|
+| 作业 | 内置 SocketWindowWordCount，socket 源 19000 |
+| 数据 | 10 条流水事件（itemA×4, itemB×3, itemC×3） |
+| 结果 | 窗口统计 itemA=4, itemB=3, itemC=3 ✅ |
+| 关键坑 | Flink 作业是 socket 客户端；nc -lk 单连接 backlog 导致第二客户端卡住，改用 python3 socket 服务器 |
+
 ## 五、关键坑位与解决
 
 ### 5.1 下划线 hostname 导致 URI 解析失败（核心坑）
@@ -131,6 +151,7 @@ docker exec hakira_ledger_flink_jobmanager flink run \
 
 ## 六、后续工作（下一小步）
 
-1. 编写自定义 Spark 对账作业（读 MySQL journal_entry 校验借贷平衡）
-2. 编写自定义 Flink 流式作业（实时流水统计）
+1. ~~编写自定义 Spark 对账作业~~ ✅ 已完成（pyspark 校验借贷平衡，见 4.1）
+2. ~~编写自定义 Flink 流式作业~~ ✅ 已完成（socket 流式统计，见 4.1）
 3. flink/spark Spring Boot 服务通过客户端 API 提交作业到集群（替代手动提交）
+4. 作业脚本固化到项目（当前为 /tmp 临时验证脚本）
