@@ -43,6 +43,12 @@ public enum BizErrorCode {
     /** 凭证状态不允许当前操作 */
     ENTRY_STATUS_INVALID("1008", "凭证状态不允许当前操作"),
 
+    /** 会计期间已结账 */
+    PERIOD_CLOSED("1009", "会计期间已结账，拒绝分录写入"),
+
+    /** 会计期间状态不允许当前操作 */
+    PERIOD_STATUS_INVALID("1010", "会计期间状态不允许当前操作"),
+
     /** 系统未知异常 */
     SYSTEM_ERROR("88888", "系统异常，请联系管理员"),
 

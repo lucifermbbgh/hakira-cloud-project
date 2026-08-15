@@ -7,11 +7,13 @@ import com.hakira.ledger.api.dto.entry.EntrySearchRequest;
 import com.hakira.ledger.api.dto.entry.JournalEntryRequest;
 import com.hakira.ledger.api.dto.entry.JournalEntryResponse;
 import com.hakira.ledger.api.entry.IEntryService;
+import com.hakira.ledger.entry.mapper.AccountingPeriodMapper;
 import com.hakira.ledger.entry.mapper.AccountSubjectMapper;
 import com.hakira.ledger.entry.mapper.AuxiliaryMapper;
 import com.hakira.ledger.entry.mapper.JournalEntryLineAuxMapper;
 import com.hakira.ledger.entry.mapper.JournalEntryLineMapper;
 import com.hakira.ledger.entry.mapper.JournalEntryMapper;
+import com.hakira.ledger.entry.pojo.AccountingPeriod;
 import com.hakira.ledger.entry.pojo.JournalEntry;
 import com.hakira.ledger.entry.pojo.JournalEntryLine;
 import com.hakira.ledger.entry.pojo.JournalEntryLineAux;
@@ -41,17 +43,20 @@ public class EntryServiceImpl implements IEntryService {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter VOUCHER_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final DateTimeFormatter PERIOD_FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");
     private static final String STATUS_DRAFT = "DRAFT";
     private static final String STATUS_PENDING = "PENDING";
     private static final String STATUS_POSTED = "POSTED";
     private static final String STATUS_REVERSED = "REVERSED";
     private static final String STATUS_VOID = "VOID";
+    private static final String STATUS_CLOSED = "CLOSED";
 
     private final JournalEntryMapper journalEntryMapper;
     private final JournalEntryLineMapper journalEntryLineMapper;
     private final AccountSubjectMapper accountSubjectMapper;
     private final JournalEntryLineAuxMapper journalEntryLineAuxMapper;
     private final AuxiliaryMapper auxiliaryMapper;
+    private final AccountingPeriodMapper accountingPeriodMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -82,6 +87,9 @@ public class EntryServiceImpl implements IEntryService {
         // 3. 生成分录ID + 解析记账日期
         String entryId = IdGeneratorUtil.getId();
         LocalDate entryDate = parseDate(request.getEntryDate());
+
+        // 3.1 校验会计期间可录入（CLOSED 期间拒绝，Phase 9）
+        checkPeriodWritable(entryDate);
 
         // 4. 写入分录头（凭证号：未传则自动生成）
         JournalEntry entry = new JournalEntry();
@@ -182,6 +190,18 @@ public class EntryServiceImpl implements IEntryService {
             return LocalDate.now();
         }
         return LocalDate.parse(dateStr, DATE_FORMATTER);
+    }
+
+    /** 校验会计期间可录入（CLOSED 期间拒绝；首次录入自动建 OPEN 期间，Phase 9 期间锁定） */
+    private void checkPeriodWritable(LocalDate entryDate) {
+        String period = entryDate.format(PERIOD_FORMATTER);
+        AccountingPeriod ap = accountingPeriodMapper.selectByPeriod(period);
+        if (ap != null && STATUS_CLOSED.equals(ap.getStatus())) {
+            throw new BizException(BizErrorCode.PERIOD_CLOSED, period);
+        }
+        if (ap == null) {
+            accountingPeriodMapper.insertOpen(period);
+        }
     }
 
     @Override
