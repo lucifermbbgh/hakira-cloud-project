@@ -13,6 +13,8 @@ public class StockMovementRequest {
     private BigDecimal quantity;
     /** 单价（入库传入） */
     private BigDecimal unitCost;
+    /** 计价方法：WEIGHTED_AVG / FIFO（首次入库时设置） */
+    private String costingMethod;
     /** 单位 */
     private String unit;
     /** 关联凭证号 */

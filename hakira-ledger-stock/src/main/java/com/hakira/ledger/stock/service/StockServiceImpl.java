@@ -8,8 +8,11 @@ import com.hakira.ledger.api.dto.stock.StockMovementResponse;
 import com.hakira.ledger.api.dto.stock.StockSnapshotResponse;
 import com.hakira.ledger.api.dto.stock.StocktakeRequest;
 import com.hakira.ledger.api.stock.IStockService;
+import com.hakira.ledger.stock.mapper.CostTransferMapper;
+import com.hakira.ledger.stock.mapper.InventoryLotMapper;
 import com.hakira.ledger.stock.mapper.StockMovementMapper;
 import com.hakira.ledger.stock.mapper.StockSnapshotMapper;
+import com.hakira.ledger.stock.pojo.InventoryLot;
 import com.hakira.ledger.stock.pojo.StockMovement;
 import com.hakira.ledger.stock.pojo.StockSnapshot;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +45,7 @@ public class StockServiceImpl implements IStockService {
 
     private final StockMovementMapper stockMovementMapper;
     private final StockSnapshotMapper stockSnapshotMapper;
+    private final InventoryLotMapper inventoryLotMapper;
     private final CostTransferService costTransferService;
 
     @Override
@@ -63,6 +67,7 @@ public class StockServiceImpl implements IStockService {
             snapshot.setTotalCost(inboundCost);
             snapshot.setWeightedAvgCost(quantity.compareTo(BigDecimal.ZERO) > 0
                     ? inboundCost.divide(quantity, 4, RoundingMode.HALF_UP) : BigDecimal.ZERO);
+            snapshot.setCostingMethod(request.getCostingMethod() != null ? request.getCostingMethod() : "WEIGHTED_AVG");
             snapshot.setUnit(request.getUnit());
             stockSnapshotMapper.insert(snapshot);
         } else {
@@ -87,6 +92,11 @@ public class StockServiceImpl implements IStockService {
         movement.setTotalCost(inboundCost);
         stockMovementMapper.insert(movement);
 
+        // FIFO 模式：创建批次
+        if ("FIFO".equals(snapshot.getCostingMethod())) {
+            createLot(request.getItemCode(), unitCost, quantity, now.toLocalDate());
+        }
+
         log.info("入库成功: movementId={}, itemCode={}, quantity={}, 单价={}, 成本={}, 加权平均={}",
                 movementId, request.getItemCode(), quantity, unitCost, inboundCost, snapshot.getWeightedAvgCost());
         return buildMovementResponse(movement, now);
@@ -106,9 +116,11 @@ public class StockServiceImpl implements IStockService {
                     String.format("itemCode=%s, 当前库存=%s, 申请出库=%s", request.getItemCode(), current, quantity));
         }
 
-        // 出库成本 = 数量 × 当前加权平均单价（移动加权平均，出库不改变单价）
+        // 出库成本：FIFO 按批次扣减 / 加权平均按单价
         BigDecimal avgCost = snapshot.getWeightedAvgCost() != null ? snapshot.getWeightedAvgCost() : BigDecimal.ZERO;
-        BigDecimal outboundCost = quantity.multiply(avgCost).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal outboundCost = "FIFO".equals(snapshot.getCostingMethod())
+                ? fifoOutboundCost(request.getItemCode(), quantity)
+                : quantity.multiply(avgCost).setScale(2, RoundingMode.HALF_UP);
 
         snapshot.setCurrentQuantity(current.subtract(quantity));
         snapshot.setTotalCost(nz(snapshot.getTotalCost()).subtract(outboundCost));
@@ -251,5 +263,32 @@ public class StockServiceImpl implements IStockService {
 
     private BigDecimal nz(BigDecimal v) {
         return v == null ? BigDecimal.ZERO : v;
+    }
+
+    /** FIFO：创建批次 */
+    private void createLot(String itemCode, BigDecimal unitCost, BigDecimal quantity, LocalDate date) {
+        InventoryLot lot = new InventoryLot();
+        lot.setItemCode(itemCode);
+        lot.setUnitCost(unitCost);
+        lot.setRemainingQuantity(quantity);
+        lot.setInboundDate(date);
+        inventoryLotMapper.insert(lot);
+    }
+
+    /** FIFO：按批次先进先出扣减，返回出库成本 */
+    private BigDecimal fifoOutboundCost(String itemCode, BigDecimal quantity) {
+        List<InventoryLot> lots = inventoryLotMapper.selectActiveLots(itemCode);
+        BigDecimal remaining = quantity;
+        BigDecimal cost = BigDecimal.ZERO;
+        for (InventoryLot lot : lots) {
+            if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
+                break;
+            }
+            BigDecimal deduct = lot.getRemainingQuantity().min(remaining);
+            cost = cost.add(deduct.multiply(lot.getUnitCost()));
+            inventoryLotMapper.updateRemaining(lot.getLotId(), lot.getRemainingQuantity().subtract(deduct));
+            remaining = remaining.subtract(deduct);
+        }
+        return cost.setScale(2, RoundingMode.HALF_UP);
     }
 }

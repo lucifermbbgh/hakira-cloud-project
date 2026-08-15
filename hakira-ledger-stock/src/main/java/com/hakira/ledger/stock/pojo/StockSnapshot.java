@@ -22,6 +22,8 @@ public class StockSnapshot {
     private BigDecimal totalCost;
     /** 加权平均单价 */
     private BigDecimal weightedAvgCost;
+    /** 计价方法：WEIGHTED_AVG / FIFO */
+    private String costingMethod;
     /** 单位 */
     private String unit;
     /** 状态：ACTIVE=有效 */
