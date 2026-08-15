@@ -3,6 +3,7 @@ package com.hakira.ledger.entry.service.impl;
 import com.hakira.common.exception.BizErrorCode;
 import com.hakira.common.exception.BizException;
 import com.hakira.common.util.IdGeneratorUtil;
+import com.hakira.ledger.api.audit.IAuditService;
 import com.hakira.ledger.api.closing.IClosingService;
 import com.hakira.ledger.api.dto.closing.AccountBalanceResponse;
 import com.hakira.ledger.api.dto.closing.ClosingResponse;
@@ -59,6 +60,7 @@ public class ClosingServiceImpl implements IClosingService {
     private final AccountBalanceMapper accountBalanceMapper;
     private final JournalEntryMapper journalEntryMapper;
     private final JournalEntryLineMapper journalEntryLineMapper;
+    private final IAuditService auditService;
 
     /** 结转科目（净额） */
     private static class TransferItem {
@@ -176,6 +178,7 @@ public class ClosingServiceImpl implements IClosingService {
         response.setBalanceCount(balanceCount);
         log.info("月结完成: 期间={}, 结转凭证={}, 物化科目={}", period,
                 transferResult.getVoucherNos(), balanceCount);
+        auditService.record("CLOSE_PERIOD", "PERIOD", period, "结账完成");
         return response;
     }
 

@@ -3,6 +3,7 @@ package com.hakira.ledger.entry.service.impl;
 import com.hakira.common.exception.BizErrorCode;
 import com.hakira.common.exception.BizException;
 import com.hakira.common.util.IdGeneratorUtil;
+import com.hakira.ledger.api.audit.IAuditService;
 import com.hakira.ledger.api.dto.entry.EntrySearchRequest;
 import com.hakira.ledger.api.dto.entry.JournalEntryRequest;
 import com.hakira.ledger.api.dto.entry.JournalEntryResponse;
@@ -57,6 +58,7 @@ public class EntryServiceImpl implements IEntryService {
     private final JournalEntryLineAuxMapper journalEntryLineAuxMapper;
     private final AuxiliaryMapper auxiliaryMapper;
     private final AccountingPeriodMapper accountingPeriodMapper;
+    private final IAuditService auditService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -123,6 +125,8 @@ public class EntryServiceImpl implements IEntryService {
 
         log.info("记账成功: entryId={}, voucherNo={}, 借方={}, 贷方={}",
                 entryId, request.getVoucherNo(), totalDebit, totalCredit);
+        auditService.record("POST_ENTRY", "JOURNAL_ENTRY", entryId,
+                "凭证号=" + entry.getVoucherNo() + ", 借方=" + totalDebit + ", 贷方=" + totalCredit);
         return buildResponse(entry, lines);
     }
 
@@ -268,6 +272,8 @@ public class EntryServiceImpl implements IEntryService {
         }
 
         log.info("冲销成功: 原凭证={}, 冲销凭证={}", entryId, reverseId);
+        auditService.record("REVERSE_ENTRY", "JOURNAL_ENTRY", entryId,
+                "冲销凭证=" + reverse.getVoucherNo());
         return buildResponse(reverse, reverseLines);
     }
 
