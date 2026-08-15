@@ -3,7 +3,7 @@
 > **项目名称：** hakira-cloud-project（原名 Elysia）
 > **定位：** 会计账簿数据处理集成系统（复式记账）
 > **技术栈：** Spring Cloud Alibaba 微服务
-> **文档版本：** v1.0 · 2026-08-14
+> **文档版本：** v2.0 · 2026-08-15（终版，16 阶段全部完成）
 
 ---
 
@@ -36,7 +36,7 @@
 | 审批流 | Flowable 工作流引擎，凭证审批 |
 | 批处理 | Quartz 定时调度 + Spring Batch 批量对账 |
 | 数据持久化 | MySQL 分区表存储，会计数据不丢失 |
-| 大数据分析 | Flink 流式 + Spark 批式分析（规划中） |
+| 大数据分析 | Flink 流式 + Spark 批式分析 |
 
 ### 1.3 设计原则
 
@@ -67,7 +67,7 @@
 | 数据库 | MySQL | 8.0 | 会计数据存储 |
 | 审批流 | Flowable | — | 工作流引擎 |
 | 批处理 | Spring Batch + Quartz | — | 批量对账 + 定时调度 |
-| 大数据 | Flink / Spark | — | 流式/批式分析（规划中） |
+| 大数据 | Flink / Spark | — | 流式/批式分析 |
 
 ---
 
@@ -130,8 +130,8 @@ task ──> entry / stock（对账时读分录/库存）
 | `hakira-ledger-config` | ledger | 配置中心 |
 | `hakira-ledger-mq` | ledger | RocketMQ 独立模块（自动装配） |
 | `hakira-ledger-workflow` | ledger | Flowable 审批流 |
-| `hakira-ledger-flink` | ledger | Flink 流式分析（规划中） |
-| `hakira-ledger-spark` | ledger | Spark 批式分析（规划中） |
+| `hakira-ledger-flink` | ledger | Flink 流式分析 |
+| `hakira-ledger-spark` | ledger | Spark 批式分析 |
 | `hakira-ledger-task` | ledger | Quartz 调度 + Spring Batch 批处理 |
 
 ---
@@ -209,31 +209,45 @@ gateway 校验 JWT → 放行/401
 
 > 完整路线图（含依赖关系、阶段目标、关键任务拆解）见 [ROADMAP.md](ROADMAP.md)。
 
-### 6.1 已完成（Phase 1-5）
+### 6.1 全部 16 阶段已完成（2026-08-15）
 
 ```
-Phase 1 ── 模块架构重构（market→ledger）                  ✅ 已完成
-Phase 2 ── 会计复式记账核心业务（ledger-core）             ✅ 已完成
-Phase 3 ── 审批流与批处理（Flowable + Quartz + Batch）     ✅ 已完成
-Phase 4 ── 基础设施部署与冒烟测试（MySQL + Nacos）         ✅ 已完成
-Phase 5 ── 数据持久化与安全优化（异常处理器+BCrypt+DB）     ✅ 已完成
+Phase 1  ── 模块架构重构（market→ledger）                  ✅
+Phase 2  ── 会计复式记账核心业务（ledger-core）             ✅
+Phase 3  ── 审批流与批处理（Flowable + Quartz + Batch）     ✅
+Phase 4  ── 基础设施部署与冒烟测试（MySQL + Nacos）         ✅
+Phase 5  ── 数据持久化与安全优化                            ✅
+Phase 6  ── 大数据分析层（Flink + Spark）                  ✅
+Phase 7  ── 会计科目与辅助核算体系（82 科目 + 6 维度）       ✅
+Phase 8  ── 凭证管理深化（状态机/冲销/自动编号）            ✅
+Phase 9  ── 期末结账与账务结转（顺序约束/幂等）             ✅
+Phase 10 ── 财务报表体系（三大报表 + 账簿）                 ✅
+Phase 11 ── 成本核算（料工费归集/制造费用分配）             ✅
+Phase 12 ── 固定资产管理（直线法/双倍余额递减折旧）         ✅
+Phase 13 ── 应收应付与往来账龄（账龄分析/坏账处理）         ✅
+Phase 14 ── 存货核算与计价（加权平均/FIFO/盘点/结转）       ✅
+Phase 15 ── 预算管理（编制/监控/差异分析）                  ✅
+Phase 16 ── 审计合规与系统治理（审计日志/数据追溯）         ✅
 ```
 
-### 6.2 待开发（Phase 6-16 · 会计业务深化）
+### 6.2 业务能力清单
 
-```
-Phase 6  ── 大数据分析层（Flink + Spark）                 📋 待开始
-Phase 7  ── 会计科目与辅助核算体系                        📋 待开始
-Phase 8  ── 凭证管理深化（审核/冲销/红字）                 📋 待开始
-Phase 9  ── 期末结账与账务结转                            📋 待开始
-Phase 10 ── 财务报表体系（三大报表）                       📋 待开始
-Phase 11 ── 成本核算                                     📋 待开始
-Phase 12 ── 固定资产管理                                  📋 待开始
-Phase 13 ── 应收应付与往来账龄                            📋 待开始
-Phase 14 ── 存货核算与计价                                📋 待开始
-Phase 15 ── 预算管理                                     📋 待开始
-Phase 16 ── 审计合规与系统治理                            📋 待开始
-```
+| 业务域 | 能力 | 主要接口 |
+|--------|------|---------|
+| 凭证 | 录入 / 冲销 / 状态机 / 自动编号 | `/entry/*` |
+| 结账 | 期末结转 / 试算平衡 / 科目余额 | `/closing/*` |
+| 报表 | 三大报表 + 总账/明细账/日记账 | `/report/*` |
+| 成本 | 成本归集 / 制造费用分配 / 成本单 | `/cost/*` |
+| 资产 | 资产卡片 / 折旧计提 / 处置 | `/asset/*` |
+| 往来 | 账龄分析 / 坏账计提/核销/收回 | `/aging/*` `/baddebt/*` |
+| 存货 | 计价 / 盘点 / 出库成本结转 | `/stock/*` |
+| 预算 | 编制 / 执行监控 / 差异分析 | `/budget/*` |
+| 审计 | 审计日志 / 数据全链路追溯 | `/audit/*` |
+
+### 6.3 后续规划（待单独规划）
+
+- **审核流对接 Flowable**：当前本地状态机替代，跨服务对接待规划（见 PHASE-8 设计文档 §七）
+- **RBAC 权限 + 多租户**：系统级跨服务改造，待规划（见 PHASE-16 设计文档 §七）
 
 > 前端另开 `hakira-ledger-web` 项目实现，不在本路线内。
 

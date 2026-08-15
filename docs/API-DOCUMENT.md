@@ -1,6 +1,6 @@
 # hakira-cloud-project — 接口文档
 
-> **版本：** v1.0 · 2026-08-14
+> **版本：** v2.0 · 2026-08-15（16 阶段全部接口）
 > **网关入口：** `http://localhost:9000`（统一路由 + JWT 校验）
 > **直连端口：** auth 9010 / entry 9020 / stock 9030
 
@@ -19,12 +19,19 @@
 
 | 错误码 | 含义 |
 |--------|------|
+| 1000 | 业务处理失败 |
 | 1001 | 借贷不平衡 |
 | 1002 | 库存不足 |
 | 1003 | 分录不存在 |
 | 1004 | 会计科目不存在 |
 | 1005 | 数据已被修改（乐观锁冲突） |
+| 1006 | 辅助核算维度不存在 |
+| 1007 | 辅助核算维度值不存在 |
+| 1008 | 凭证状态不允许当前操作 |
+| 1009 | 会计期间已结账，拒绝分录写入 |
+| 1010 | 会计期间状态不允许当前操作 |
 | 88888 | 系统异常 |
+| 99999 | 系统繁忙（限流/降级） |
 
 ---
 
@@ -248,3 +255,88 @@ Authorization: Bearer <token>
 ```
 
 无令牌或令牌失效 → 网关返回 401。
+
+---
+
+## 八、账务业务接口（Phase 6-16）
+
+### 8.1 凭证状态机（entry）
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/entry/submit/{entryId}` | POST | 提交审核（DRAFT→PENDING） |
+| `/entry/approve/{entryId}` | POST | 审核通过（PENDING→POSTED） |
+| `/entry/reject/{entryId}` | POST | 审核驳回（PENDING→DRAFT） |
+| `/entry/void/{entryId}` | POST | 作废（POSTED/DRAFT→VOID） |
+| `/entry/reverse/{entryId}` | POST | 冲销（POSTED→REVERSED，生成反向分录） |
+
+### 8.2 期末结账（closing）
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/closing/profit-transfer?period=YYYYMM` | POST | 损益结转 |
+| `/closing/close?period=YYYYMM` | POST | 月结（含顺序约束） |
+| `/closing/trial-balance?period=YYYYMM` | GET | 试算平衡表 |
+| `/closing/balance?period=YYYYMM` | GET | 科目余额表 |
+
+### 8.3 财务报表（report）
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/report/balance-sheet?period=YYYYMM` | GET | 资产负债表 |
+| `/report/income-statement?period=YYYYMM` | GET | 利润表 |
+| `/report/cash-flow?period=YYYYMM` | GET | 现金流量表 |
+| `/report/ledger?period=YYYYMM` | GET | 总账 |
+| `/report/detail-ledger?subjectCode=X&period=YYYYMM` | GET | 明细账 |
+| `/report/journal?period=YYYYMM` | GET | 日记账 |
+
+### 8.4 成本核算（cost）
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/cost/allocate-overhead?period=YYYYMM` | POST | 制造费用分配 |
+| `/cost/cost-sheet?period=YYYYMM` | GET | 成本计算单 |
+
+### 8.5 固定资产（asset）
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/asset/create` | POST | 登记资产卡片 |
+| `/asset/{code}` | GET | 查询资产 |
+| `/asset/list` | GET | 资产列表 |
+| `/asset/depreciate?period=YYYYMM` | POST | 折旧计提 |
+| `/asset/dispose/{code}` | POST | 资产处置 |
+
+### 8.6 往来账龄与坏账（aging/baddebt）
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/aging/partner/list?dimension=CUSTOMER` | GET | 往来单位列表 |
+| `/aging/receivable?asOf=YYYY-MM-DD` | GET | 应收账款账龄 |
+| `/aging/payable?asOf=YYYY-MM-DD` | GET | 应付账款账龄 |
+| `/baddebt/provision?asOf=YYYY-MM-DD` | POST | 坏账准备计提 |
+| `/baddebt/writeoff` | POST | 坏账核销 |
+| `/baddebt/recover` | POST | 坏账收回 |
+
+### 8.7 存货计价（stock 扩展）
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/stock/inbound` | POST | 入库（支持 unitCost/costingMethod） |
+| `/stock/outbound` | POST | 出库（FIFO/加权平均计价 + 成本结转凭证） |
+| `/stock/stocktake` | POST | 盘点（盘盈盘亏） |
+
+### 8.8 预算管理（budget）
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/budget/set` | POST | 预算编制 |
+| `/budget/query?period=YYYYMM` | GET | 执行监控 |
+| `/budget/variance?period=YYYYMM` | GET | 差异分析 |
+
+### 8.9 审计（audit）
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/audit/logs?limit=N` | GET | 审计日志 |
+| `/audit/trace/{entryId}` | GET | 数据全链路追溯 |
