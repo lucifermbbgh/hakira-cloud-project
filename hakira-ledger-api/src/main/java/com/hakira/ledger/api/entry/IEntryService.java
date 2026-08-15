@@ -18,4 +18,7 @@ public interface IEntryService {
 
     /** 按条件查询分录列表 */
     List<JournalEntryResponse> searchEntries(EntrySearchRequest request);
+
+    /** 冲销凭证（生成反向分录，原凭证置 REVERSED） */
+    JournalEntryResponse reverseEntry(String entryId);
 }

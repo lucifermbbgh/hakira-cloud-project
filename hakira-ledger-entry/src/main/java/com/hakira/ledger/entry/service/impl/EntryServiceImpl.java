@@ -39,6 +39,9 @@ import java.util.stream.Collectors;
 public class EntryServiceImpl implements IEntryService {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter VOUCHER_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final String STATUS_POSTED = "POSTED";
+    private static final String STATUS_REVERSED = "REVERSED";
 
     private final JournalEntryMapper journalEntryMapper;
     private final JournalEntryLineMapper journalEntryLineMapper;
@@ -76,15 +79,15 @@ public class EntryServiceImpl implements IEntryService {
         String entryId = IdGeneratorUtil.getId();
         LocalDate entryDate = parseDate(request.getEntryDate());
 
-        // 4. 写入分录头
+        // 4. 写入分录头（凭证号：未传则自动生成）
         JournalEntry entry = new JournalEntry();
         entry.setEntryId(entryId);
         entry.setEntryDate(entryDate);
-        entry.setVoucherNo(request.getVoucherNo());
+        entry.setVoucherNo(generateVoucherNo(request.getVoucherNo(), entryDate));
         entry.setDescription(request.getDescription());
         entry.setTotalDebit(totalDebit);
         entry.setTotalCredit(totalCredit);
-        entry.setStatus("POSTED");
+        entry.setStatus(STATUS_POSTED);
         journalEntryMapper.insert(entry);
 
         // 5. 写入分录行
@@ -175,6 +178,94 @@ public class EntryServiceImpl implements IEntryService {
             return LocalDate.now();
         }
         return LocalDate.parse(dateStr, DATE_FORMATTER);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public JournalEntryResponse reverseEntry(String entryId) {
+        // 1. 查询原分录
+        JournalEntry entry = journalEntryMapper.selectByEntryId(entryId);
+        if (entry == null) {
+            throw new BizException(BizErrorCode.ENTRY_NOT_FOUND, entryId);
+        }
+        // 2. 校验状态：仅 POSTED 可冲销
+        if (!STATUS_POSTED.equals(entry.getStatus())) {
+            throw new BizException(BizErrorCode.ENTRY_STATUS_INVALID,
+                    String.format("凭证 %s 状态为 %s，不可冲销", entryId, entry.getStatus()));
+        }
+        // 3. 查询原分录行
+        List<JournalEntryLine> lines = journalEntryLineMapper.selectByEntryId(entryId, entry.getEntryDate());
+        // 4. 查询原辅助核算，按 lineId 分组
+        Map<Long, List<JournalEntryLineAux>> auxMap = journalEntryLineAuxMapper
+                .selectByEntryId(entryId, entry.getEntryDate())
+                .stream()
+                .collect(Collectors.groupingBy(JournalEntryLineAux::getLineId));
+
+        // 5. 生成反向分录头
+        String reverseId = IdGeneratorUtil.getId();
+        LocalDate reverseDate = LocalDate.now();
+        JournalEntry reverse = new JournalEntry();
+        reverse.setEntryId(reverseId);
+        reverse.setEntryDate(reverseDate);
+        reverse.setVoucherNo(generateVoucherNo(null, reverseDate));
+        reverse.setDescription("冲销原凭证 " + entry.getVoucherNo());
+        reverse.setTotalDebit(entry.getTotalCredit());
+        reverse.setTotalCredit(entry.getTotalDebit());
+        reverse.setStatus(STATUS_POSTED);
+        journalEntryMapper.insert(reverse);
+
+        // 6. 写反向分录行（借贷互换 + 复制辅助核算）
+        List<JournalEntryLine> reverseLines = new ArrayList<>();
+        int lineNo = 1;
+        for (JournalEntryLine l : lines) {
+            JournalEntryLine rl = new JournalEntryLine();
+            rl.setEntryId(reverseId);
+            rl.setEntryDate(reverseDate);
+            rl.setLineNo(lineNo++);
+            rl.setSubjectCode(l.getSubjectCode());
+            rl.setSubjectName(l.getSubjectName());
+            rl.setDescription(l.getDescription());
+            rl.setDebitAmount(l.getCreditAmount());
+            rl.setCreditAmount(l.getDebitAmount());
+            journalEntryLineMapper.insert(rl);
+            reverseLines.add(rl);
+            List<JournalEntryLineAux> originAux = auxMap.get(l.getLineId());
+            if (originAux != null) {
+                for (JournalEntryLineAux a : originAux) {
+                    journalEntryLineAuxMapper.insert(rl.getLineId(), a.getDimensionCode(), a.getValueCode());
+                }
+            }
+        }
+
+        // 7. 原分录置 REVERSED（乐观锁）
+        int updated = journalEntryMapper.updateStatus(entryId, STATUS_REVERSED, entry.getVersion());
+        if (updated == 0) {
+            throw new BizException(BizErrorCode.DATA_VERSION_CONFLICT, entryId);
+        }
+
+        log.info("冲销成功: 原凭证={}, 冲销凭证={}", entryId, reverseId);
+        return buildResponse(reverse, reverseLines);
+    }
+
+    /** 凭证号：未传则自动生成 PZ-YYYYMMDD-NNN */
+    private String generateVoucherNo(String voucherNo, LocalDate entryDate) {
+        if (voucherNo != null && !voucherNo.isEmpty()) {
+            return voucherNo;
+        }
+        String dateStr = entryDate.format(VOUCHER_DATE_FORMATTER);
+        String maxVoucherNo = journalEntryMapper.selectMaxVoucherNo(dateStr);
+        int seq = 1;
+        if (maxVoucherNo != null && !maxVoucherNo.isEmpty()) {
+            int idx = maxVoucherNo.lastIndexOf('-');
+            if (idx >= 0) {
+                try {
+                    seq = Integer.parseInt(maxVoucherNo.substring(idx + 1)) + 1;
+                } catch (NumberFormatException ignored) {
+                    // 非数字后缀，从 1 开始
+                }
+            }
+        }
+        return String.format("PZ-%s-%03d", dateStr, seq);
     }
 
     /** 写入分录行辅助核算维度（校验维度与值合法性，Phase 7） */

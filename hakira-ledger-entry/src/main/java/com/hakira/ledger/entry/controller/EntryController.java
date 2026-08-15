@@ -34,4 +34,10 @@ public class EntryController {
     public Result<List<JournalEntryResponse>> searchEntries(@RequestBody EntrySearchRequest request) {
         return Result.returnSuccess(entryService.searchEntries(request));
     }
+
+    @PostMapping("/reverse/{entryId}")
+    public Result<JournalEntryResponse> reverseEntry(@PathVariable("entryId") String entryId) {
+        log.info("收到冲销请求: entryId={}", entryId);
+        return Result.returnSuccess(entryService.reverseEntry(entryId));
+    }
 }

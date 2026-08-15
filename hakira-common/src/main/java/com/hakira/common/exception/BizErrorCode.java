@@ -40,6 +40,9 @@ public enum BizErrorCode {
     /** 辅助核算维度值不存在 */
     AUX_VALUE_NOT_FOUND("1007", "辅助核算维度值不存在"),
 
+    /** 凭证状态不允许当前操作 */
+    ENTRY_STATUS_INVALID("1008", "凭证状态不允许当前操作"),
+
     /** 系统未知异常 */
     SYSTEM_ERROR("88888", "系统异常，请联系管理员"),
 

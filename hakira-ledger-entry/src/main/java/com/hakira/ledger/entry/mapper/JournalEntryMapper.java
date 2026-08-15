@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,6 +24,15 @@ public interface JournalEntryMapper {
 
     @Select("SELECT * FROM journal_entry WHERE entry_id = #{entryId}")
     JournalEntry selectByEntryId(@Param("entryId") String entryId);
+
+    @Update("UPDATE journal_entry SET status = #{status}, version = version + 1 " +
+            "WHERE entry_id = #{entryId} AND version = #{version}")
+    int updateStatus(@Param("entryId") String entryId,
+                     @Param("status") String status,
+                     @Param("version") int version);
+
+    @Select("SELECT MAX(voucher_no) FROM journal_entry WHERE voucher_no LIKE CONCAT('PZ-', #{dateStr}, '-%')")
+    String selectMaxVoucherNo(@Param("dateStr") String dateStr);
 
     @Select("<script>" +
             "SELECT * FROM journal_entry e WHERE 1=1" +
