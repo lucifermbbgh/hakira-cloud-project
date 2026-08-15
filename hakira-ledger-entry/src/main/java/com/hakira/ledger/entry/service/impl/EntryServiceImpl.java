@@ -14,6 +14,7 @@ import com.hakira.ledger.entry.mapper.JournalEntryLineMapper;
 import com.hakira.ledger.entry.mapper.JournalEntryMapper;
 import com.hakira.ledger.entry.pojo.JournalEntry;
 import com.hakira.ledger.entry.pojo.JournalEntryLine;
+import com.hakira.ledger.entry.pojo.JournalEntryLineAux;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -140,6 +142,20 @@ public class EntryServiceImpl implements IEntryService {
         response.setTotalCredit(entry.getTotalCredit());
         response.setStatus(entry.getStatus());
 
+        // 查询辅助核算维度，按 lineId 分组（Phase 7）
+        Map<Long, List<JournalEntryResponse.AuxItem>> auxMap = journalEntryLineAuxMapper
+                .selectByEntryId(entry.getEntryId(), entry.getEntryDate())
+                .stream()
+                .collect(Collectors.groupingBy(
+                        JournalEntryLineAux::getLineId,
+                        Collectors.mapping(a -> {
+                            JournalEntryResponse.AuxItem item = new JournalEntryResponse.AuxItem();
+                            item.setDimensionCode(a.getDimensionCode());
+                            item.setValueCode(a.getValueCode());
+                            return item;
+                        }, Collectors.toList())
+                ));
+
         List<JournalEntryResponse.EntryLineResponse> lineResponses = lines.stream().map(l -> {
             JournalEntryResponse.EntryLineResponse lr = new JournalEntryResponse.EntryLineResponse();
             lr.setAccountCode(l.getSubjectCode());
@@ -147,6 +163,7 @@ public class EntryServiceImpl implements IEntryService {
             lr.setDescription(l.getDescription());
             lr.setDebitAmount(l.getDebitAmount());
             lr.setCreditAmount(l.getCreditAmount());
+            lr.setAux(auxMap.get(l.getLineId()));
             return lr;
         }).collect(Collectors.toList());
         response.setEntries(lineResponses);

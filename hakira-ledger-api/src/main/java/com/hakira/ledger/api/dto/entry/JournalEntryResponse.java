@@ -22,5 +22,14 @@ public class JournalEntryResponse {
         private String description;
         private BigDecimal debitAmount;
         private BigDecimal creditAmount;
+        /** 辅助核算维度列表 */
+        private List<AuxItem> aux;
+    }
+
+    /** 辅助核算维度项 */
+    @Data
+    public static class AuxItem {
+        private String dimensionCode;
+        private String valueCode;
     }
 }
