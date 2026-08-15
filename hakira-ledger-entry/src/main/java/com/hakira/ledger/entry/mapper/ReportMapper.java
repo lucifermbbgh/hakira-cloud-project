@@ -1,5 +1,6 @@
 package com.hakira.ledger.entry.mapper;
 
+import com.hakira.ledger.entry.pojo.LedgerRow;
 import com.hakira.ledger.entry.pojo.ReportItem;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -48,4 +49,33 @@ public interface ReportMapper {
             "GROUP BY aux.value_code")
     List<ReportItem> selectCashFlowByPeriod(@Param("startDate") LocalDate startDate,
                                             @Param("endDate") LocalDate endDate);
+
+    /** 明细账：某科目某期间逐笔分录 */
+    @Select("SELECT e.voucher_no AS voucherNo, e.entry_date AS entryDate, l.description AS description, " +
+            "l.debit_amount AS debitAmount, l.credit_amount AS creditAmount " +
+            "FROM journal_entry_line l " +
+            "JOIN journal_entry e ON l.entry_id = e.entry_id AND l.entry_date = e.entry_date " +
+            "WHERE l.subject_code = #{subjectCode} AND l.entry_date >= #{startDate} AND l.entry_date < #{endDate} " +
+            "ORDER BY l.entry_date, e.voucher_no, l.line_no")
+    List<LedgerRow> selectDetailLedger(@Param("subjectCode") String subjectCode,
+                                       @Param("startDate") LocalDate startDate,
+                                       @Param("endDate") LocalDate endDate);
+
+    /** 日记账：某期间序时全部分录 */
+    @Select("SELECT voucher_no AS voucherNo, entry_date AS entryDate, description, " +
+            "total_debit AS debitAmount, total_credit AS creditAmount " +
+            "FROM journal_entry WHERE entry_date >= #{startDate} AND entry_date < #{endDate} " +
+            "ORDER BY entry_date, voucher_no")
+    List<LedgerRow> selectJournal(@Param("startDate") LocalDate startDate,
+                                  @Param("endDate") LocalDate endDate);
+
+    /** 总账明细：某期间所有分录行（按科目分组） */
+    @Select("SELECT l.subject_code AS subjectCode, e.voucher_no AS voucherNo, e.entry_date AS entryDate, " +
+            "l.description AS description, l.debit_amount AS debitAmount, l.credit_amount AS creditAmount " +
+            "FROM journal_entry_line l " +
+            "JOIN journal_entry e ON l.entry_id = e.entry_id AND l.entry_date = e.entry_date " +
+            "WHERE l.entry_date >= #{startDate} AND l.entry_date < #{endDate} " +
+            "ORDER BY l.subject_code, l.entry_date, e.voucher_no, l.line_no")
+    List<LedgerRow> selectLedgerDetails(@Param("startDate") LocalDate startDate,
+                                        @Param("endDate") LocalDate endDate);
 }

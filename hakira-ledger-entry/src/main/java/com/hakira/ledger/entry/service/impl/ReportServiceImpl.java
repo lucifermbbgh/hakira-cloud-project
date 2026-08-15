@@ -3,8 +3,13 @@ package com.hakira.ledger.entry.service.impl;
 import com.hakira.ledger.api.dto.report.BalanceSheetResponse;
 import com.hakira.ledger.api.dto.report.CashFlowResponse;
 import com.hakira.ledger.api.dto.report.IncomeStatementResponse;
+import com.hakira.ledger.api.dto.report.LedgerAccountItem;
+import com.hakira.ledger.api.dto.report.LedgerEntryItem;
 import com.hakira.ledger.api.report.IReportService;
+import com.hakira.ledger.entry.mapper.AccountBalanceMapper;
 import com.hakira.ledger.entry.mapper.ReportMapper;
+import com.hakira.ledger.entry.pojo.AccountBalance;
+import com.hakira.ledger.entry.pojo.LedgerRow;
 import com.hakira.ledger.entry.pojo.ReportItem;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 财务报表服务实现（资产负债表 / 利润表 / 现金流量表）
@@ -38,6 +44,7 @@ public class ReportServiceImpl implements IReportService {
     private static final String CF_FINANCING = "CF003";
 
     private final ReportMapper reportMapper;
+    private final AccountBalanceMapper accountBalanceMapper;
 
     @Override
     public BalanceSheetResponse getBalanceSheet(String period) {
@@ -168,6 +175,59 @@ public class ReportServiceImpl implements IReportService {
         log.info("现金流量表: 期间={}, 经营净流量={}, 投资净流量={}, 筹资净流量={}",
                 period, operatingNet, investingNet, financingNet);
         return response;
+    }
+
+    @Override
+    public List<LedgerAccountItem> getLedger(String period) {
+        LocalDate start = YearMonth.parse(period, PERIOD_FORMATTER).atDay(1);
+        LocalDate end = start.plusMonths(1);
+        List<AccountBalance> balances = accountBalanceMapper.selectByPeriod(period);
+        Map<String, List<LedgerEntryItem>> detailsBySubject = reportMapper.selectLedgerDetails(start, end)
+                .stream()
+                .collect(Collectors.groupingBy(LedgerRow::getSubjectCode,
+                        Collectors.mapping(this::toEntryItem, Collectors.toList())));
+        List<LedgerAccountItem> result = new ArrayList<>();
+        for (AccountBalance b : balances) {
+            LedgerAccountItem item = new LedgerAccountItem();
+            item.setSubjectCode(b.getSubjectCode());
+            item.setSubjectName(b.getSubjectName());
+            item.setOpeningDebit(nz(b.getOpeningDebit()));
+            item.setOpeningCredit(nz(b.getOpeningCredit()));
+            item.setPeriodDebit(nz(b.getPeriodDebit()));
+            item.setPeriodCredit(nz(b.getPeriodCredit()));
+            item.setClosingDebit(nz(b.getClosingDebit()));
+            item.setClosingCredit(nz(b.getClosingCredit()));
+            item.setEntries(detailsBySubject.get(b.getSubjectCode()));
+            result.add(item);
+        }
+        log.info("总账: 期间={}, 科目数={}", period, result.size());
+        return result;
+    }
+
+    @Override
+    public List<LedgerEntryItem> getDetailLedger(String subjectCode, String period) {
+        LocalDate start = YearMonth.parse(period, PERIOD_FORMATTER).atDay(1);
+        LocalDate end = start.plusMonths(1);
+        return reportMapper.selectDetailLedger(subjectCode, start, end).stream()
+                .map(this::toEntryItem).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<LedgerEntryItem> getJournal(String period) {
+        LocalDate start = YearMonth.parse(period, PERIOD_FORMATTER).atDay(1);
+        LocalDate end = start.plusMonths(1);
+        return reportMapper.selectJournal(start, end).stream()
+                .map(this::toEntryItem).collect(Collectors.toList());
+    }
+
+    private LedgerEntryItem toEntryItem(LedgerRow row) {
+        LedgerEntryItem item = new LedgerEntryItem();
+        item.setVoucherNo(row.getVoucherNo());
+        item.setEntryDate(row.getEntryDate() != null ? row.getEntryDate().toString() : null);
+        item.setDescription(row.getDescription());
+        item.setDebitAmount(nz(row.getDebitAmount()));
+        item.setCreditAmount(nz(row.getCreditAmount()));
+        return item;
     }
 
     /** 损益科目净额：D 方向 = 借 - 贷（费用正），C 方向 = 贷 - 借（收入正） */

@@ -90,9 +90,9 @@
 | 资产负债表 | 三大主表 | /report/balance-sheet | ✅ 已完成（Phase 10） |
 | 利润表 | 三大主表 | /report/income-statement | ✅ 已完成（Phase 10） |
 | 现金流量表 | 三大主表 | /report/cash-flow | ✅ 已完成（Phase 10） |
-| 总账（科目总分类账） | 账簿类 | — | ⬜ 未完成 |
-| 明细账（明细分类账） | 账簿类 | — | ⬜ 未完成 |
-| 日记账（现金/银行序时账） | 账簿类 | — | ⬜ 未完成 |
+| 总账（科目总分类账） | 账簿类 | /report/ledger | ✅ 已完成 |
+| 明细账（明细分类账） | 账簿类 | /report/detail-ledger | ✅ 已完成 |
+| 日记账（序时账） | 账簿类 | /report/journal | ✅ 已完成 |
 | 成本计算单 / 成本报表 | 专项 | /cost/cost-sheet | ✅ 已完成（Phase 11） |
 | 固定资产折旧表 | 专项 | /asset/list + /asset/{code} | ✅ 已完成（Phase 12） |
 | 往来账龄分析表 | 专项 | /aging/receivable + /aging/payable | ✅ 已完成（Phase 13） |
