@@ -18,6 +18,10 @@ public class StockSnapshot {
     private String itemName;
     /** 当前库存量 */
     private BigDecimal currentQuantity;
+    /** 库存总成本 */
+    private BigDecimal totalCost;
+    /** 加权平均单价 */
+    private BigDecimal weightedAvgCost;
     /** 单位 */
     private String unit;
     /** 状态：ACTIVE=有效 */

@@ -8,8 +8,10 @@ public class StockMovementResponse {
     private String movementId;
     private String itemCode;
     private String itemName;
-    private String direction;       // INBOUND/OUTBOUND
+    private String direction;       // INBOUND/OUTBOUND/STOCKTAKE_GAIN/STOCKTAKE_LOSS
     private BigDecimal quantity;
+    private BigDecimal unitCost;
+    private BigDecimal totalCost;
     private String unit;
     private String relatedVoucherNo;
     private String movementDate;

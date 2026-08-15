@@ -96,4 +96,4 @@
 | 成本计算单 / 成本报表 | 专项 | /cost/cost-sheet | ✅ 已完成（Phase 11） |
 | 固定资产折旧表 | 专项 | /asset/list + /asset/{code} | ✅ 已完成（Phase 12） |
 | 往来账龄分析表 | 专项 | /aging/receivable + /aging/payable | ✅ 已完成（Phase 13） |
-| 存货收发存报表 | 专项 | — | ⬜ 未完成（Phase 14） |
+| 存货收发存报表 | 专项 | /stock/movements + /stock/snapshot | ✅ 已完成（Phase 14） |

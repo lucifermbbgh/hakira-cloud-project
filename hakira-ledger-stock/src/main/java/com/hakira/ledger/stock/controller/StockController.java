@@ -4,6 +4,7 @@ import com.hakira.common.pojo.common.Result;
 import com.hakira.ledger.api.dto.stock.StockMovementRequest;
 import com.hakira.ledger.api.dto.stock.StockMovementResponse;
 import com.hakira.ledger.api.dto.stock.StockSnapshotResponse;
+import com.hakira.ledger.api.dto.stock.StocktakeRequest;
 import com.hakira.ledger.api.stock.IStockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,11 @@ public class StockController {
     @PostMapping("/outbound")
     public Result<StockMovementResponse> outbound(@RequestBody StockMovementRequest request) {
         return Result.returnSuccess(stockService.recordOutbound(request));
+    }
+
+    @PostMapping("/stocktake")
+    public Result<StockMovementResponse> stocktake(@RequestBody StocktakeRequest request) {
+        return Result.returnSuccess(stockService.stocktake(request));
     }
 
     @GetMapping("/snapshot/{itemCode}")

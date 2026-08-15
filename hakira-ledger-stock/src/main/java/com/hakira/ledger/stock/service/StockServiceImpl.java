@@ -6,6 +6,7 @@ import com.hakira.common.util.IdGeneratorUtil;
 import com.hakira.ledger.api.dto.stock.StockMovementRequest;
 import com.hakira.ledger.api.dto.stock.StockMovementResponse;
 import com.hakira.ledger.api.dto.stock.StockSnapshotResponse;
+import com.hakira.ledger.api.dto.stock.StocktakeRequest;
 import com.hakira.ledger.api.stock.IStockService;
 import com.hakira.ledger.stock.mapper.StockMovementMapper;
 import com.hakira.ledger.stock.mapper.StockSnapshotMapper;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -24,6 +27,9 @@ import java.util.stream.Collectors;
 
 /**
  * 库存服务实现（MySQL 持久化：流水表 append + 快照表乐观锁更新）
+ * <p>
+ * Phase 14 新增：移动加权平均计价 —— 入库记录单价更新加权平均，出库按加权平均计算成本，
+ * 盘点盘盈盘亏调整数量与成本。
  *
  * @author hakiraKafka
  */
@@ -43,20 +49,31 @@ public class StockServiceImpl implements IStockService {
         LocalDateTime now = LocalDateTime.now();
         String movementId = IdGeneratorUtil.getId();
         BigDecimal quantity = request.getQuantity();
+        BigDecimal unitCost = nz(request.getUnitCost());
+        BigDecimal inboundCost = quantity.multiply(unitCost).setScale(2, RoundingMode.HALF_UP);
 
-        // 更新快照（乐观锁）
         StockSnapshot snapshot = stockSnapshotMapper.selectByItemCode(request.getItemCode());
         if (snapshot == null) {
-            // 首次入库：insert 快照
+            // 首次入库：insert 快照（数量 + 成本 + 加权平均单价）
             snapshot = new StockSnapshot();
             snapshot.setItemCode(request.getItemCode());
             snapshot.setItemName(request.getItemName());
             snapshot.setCurrentQuantity(quantity);
+            snapshot.setTotalCost(inboundCost);
+            snapshot.setWeightedAvgCost(quantity.compareTo(BigDecimal.ZERO) > 0
+                    ? inboundCost.divide(quantity, 4, RoundingMode.HALF_UP) : BigDecimal.ZERO);
             snapshot.setUnit(request.getUnit());
             stockSnapshotMapper.insert(snapshot);
         } else {
-            // 已有快照：乐观锁 update（version 校验防并发重复更新）
-            snapshot.setCurrentQuantity(snapshot.getCurrentQuantity().add(quantity));
+            // 已有快照：移动加权平均重算
+            BigDecimal oldQty = nz(snapshot.getCurrentQuantity());
+            BigDecimal oldCost = nz(snapshot.getTotalCost());
+            BigDecimal newQty = oldQty.add(quantity);
+            BigDecimal newCost = oldCost.add(inboundCost);
+            snapshot.setCurrentQuantity(newQty);
+            snapshot.setTotalCost(newCost);
+            snapshot.setWeightedAvgCost(newQty.compareTo(BigDecimal.ZERO) > 0
+                    ? newCost.divide(newQty, 4, RoundingMode.HALF_UP) : BigDecimal.ZERO);
             snapshot.setItemName(request.getItemName());
             snapshot.setUnit(request.getUnit());
             if (stockSnapshotMapper.updateQuantity(snapshot) == 0) {
@@ -64,12 +81,13 @@ public class StockServiceImpl implements IStockService {
             }
         }
 
-        // 记录流水
         StockMovement movement = buildMovement(movementId, request, "INBOUND", now.toLocalDate());
+        movement.setUnitCost(unitCost);
+        movement.setTotalCost(inboundCost);
         stockMovementMapper.insert(movement);
 
-        log.info("入库成功: movementId={}, itemCode={}, quantity={}, currentStock={}",
-                movementId, request.getItemCode(), quantity, snapshot.getCurrentQuantity());
+        log.info("入库成功: movementId={}, itemCode={}, quantity={}, 单价={}, 成本={}, 加权平均={}",
+                movementId, request.getItemCode(), quantity, unitCost, inboundCost, snapshot.getWeightedAvgCost());
         return buildMovementResponse(movement, now);
     }
 
@@ -80,26 +98,82 @@ public class StockServiceImpl implements IStockService {
         String movementId = IdGeneratorUtil.getId();
         BigDecimal quantity = request.getQuantity();
 
-        // 校验库存
         StockSnapshot snapshot = stockSnapshotMapper.selectByItemCode(request.getItemCode());
-        BigDecimal current = snapshot != null ? snapshot.getCurrentQuantity() : BigDecimal.ZERO;
+        BigDecimal current = snapshot != null ? nz(snapshot.getCurrentQuantity()) : BigDecimal.ZERO;
         if (current.compareTo(quantity) < 0) {
             throw new BizException(BizErrorCode.STOCK_INSUFFICIENT,
                     String.format("itemCode=%s, 当前库存=%s, 申请出库=%s", request.getItemCode(), current, quantity));
         }
 
-        // 乐观锁更新快照
+        // 出库成本 = 数量 × 当前加权平均单价（移动加权平均，出库不改变单价）
+        BigDecimal avgCost = snapshot.getWeightedAvgCost() != null ? snapshot.getWeightedAvgCost() : BigDecimal.ZERO;
+        BigDecimal outboundCost = quantity.multiply(avgCost).setScale(2, RoundingMode.HALF_UP);
+
         snapshot.setCurrentQuantity(current.subtract(quantity));
+        snapshot.setTotalCost(nz(snapshot.getTotalCost()).subtract(outboundCost));
         if (stockSnapshotMapper.updateQuantity(snapshot) == 0) {
             throw new BizException(BizErrorCode.DATA_VERSION_CONFLICT, request.getItemCode());
         }
 
-        // 记录流水
         StockMovement movement = buildMovement(movementId, request, "OUTBOUND", now.toLocalDate());
+        movement.setUnitCost(avgCost);
+        movement.setTotalCost(outboundCost);
         stockMovementMapper.insert(movement);
 
-        log.info("出库成功: movementId={}, itemCode={}, quantity={}, currentStock={}",
-                movementId, request.getItemCode(), quantity, snapshot.getCurrentQuantity());
+        log.info("出库成功: movementId={}, itemCode={}, quantity={}, 出库成本={}, 当前库存={}",
+                movementId, request.getItemCode(), quantity, outboundCost, snapshot.getCurrentQuantity());
+        return buildMovementResponse(movement, now);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public StockMovementResponse stocktake(StocktakeRequest request) {
+        LocalDateTime now = LocalDateTime.now();
+        String movementId = IdGeneratorUtil.getId();
+        BigDecimal actualQty = request.getActualQuantity();
+
+        StockSnapshot snapshot = stockSnapshotMapper.selectByItemCode(request.getItemCode());
+        BigDecimal currentQty = snapshot != null ? nz(snapshot.getCurrentQuantity()) : BigDecimal.ZERO;
+        BigDecimal diff = actualQty.subtract(currentQty); // >0 盘盈，<0 盘亏
+
+        BigDecimal avgCost = snapshot != null && snapshot.getWeightedAvgCost() != null
+                ? snapshot.getWeightedAvgCost() : BigDecimal.ZERO;
+        BigDecimal diffCost = diff.multiply(avgCost).setScale(2, RoundingMode.HALF_UP);
+
+        String direction = diff.compareTo(BigDecimal.ZERO) >= 0 ? "STOCKTAKE_GAIN" : "STOCKTAKE_LOSS";
+
+        if (snapshot == null) {
+            snapshot = new StockSnapshot();
+            snapshot.setItemCode(request.getItemCode());
+            snapshot.setItemName(request.getItemName());
+            snapshot.setCurrentQuantity(actualQty);
+            snapshot.setTotalCost(BigDecimal.ZERO);
+            snapshot.setWeightedAvgCost(BigDecimal.ZERO);
+            snapshot.setUnit(request.getUnit());
+            stockSnapshotMapper.insert(snapshot);
+        } else {
+            snapshot.setCurrentQuantity(actualQty);
+            snapshot.setTotalCost(nz(snapshot.getTotalCost()).add(diffCost));
+            if (stockSnapshotMapper.updateQuantity(snapshot) == 0) {
+                throw new BizException(BizErrorCode.DATA_VERSION_CONFLICT, request.getItemCode());
+            }
+        }
+
+        StockMovement movement = new StockMovement();
+        movement.setMovementId(movementId);
+        movement.setItemCode(request.getItemCode());
+        movement.setItemName(request.getItemName());
+        movement.setDirection(direction);
+        movement.setQuantity(diff.abs());
+        movement.setUnitCost(avgCost);
+        movement.setTotalCost(diffCost.abs());
+        movement.setUnit(request.getUnit());
+        movement.setMovementDate(now.toLocalDate());
+        movement.setRemark(request.getRemark());
+        stockMovementMapper.insert(movement);
+
+        log.info("盘点: itemCode={}, 差异={}, 方向={}, 成本差异={}",
+                request.getItemCode(), diff, direction, diffCost.abs());
         return buildMovementResponse(movement, now);
     }
 
@@ -111,12 +185,16 @@ public class StockServiceImpl implements IStockService {
         if (snapshot != null) {
             response.setItemName(snapshot.getItemName());
             response.setCurrentQuantity(snapshot.getCurrentQuantity());
+            response.setTotalCost(nz(snapshot.getTotalCost()));
+            response.setWeightedAvgCost(nz(snapshot.getWeightedAvgCost()));
             response.setUnit(snapshot.getUnit());
             response.setLastUpdateTime(snapshot.getUpdateTime() != null
                     ? snapshot.getUpdateTime().format(DATETIME_FORMATTER) : null);
         } else {
             response.setItemName("");
             response.setCurrentQuantity(BigDecimal.ZERO);
+            response.setTotalCost(BigDecimal.ZERO);
+            response.setWeightedAvgCost(BigDecimal.ZERO);
             response.setUnit("");
         }
         return response;
@@ -130,7 +208,7 @@ public class StockServiceImpl implements IStockService {
     }
 
     private StockMovement buildMovement(String movementId, StockMovementRequest request,
-                                        String direction, java.time.LocalDate movementDate) {
+                                        String direction, LocalDate movementDate) {
         StockMovement movement = new StockMovement();
         movement.setMovementId(movementId);
         movement.setItemCode(request.getItemCode());
@@ -151,6 +229,8 @@ public class StockServiceImpl implements IStockService {
         response.setItemName(movement.getItemName());
         response.setDirection(movement.getDirection());
         response.setQuantity(movement.getQuantity());
+        response.setUnitCost(movement.getUnitCost());
+        response.setTotalCost(movement.getTotalCost());
         response.setUnit(movement.getUnit());
         response.setRelatedVoucherNo(movement.getRelatedVoucherNo());
         if (now != null) {
@@ -162,5 +242,9 @@ public class StockServiceImpl implements IStockService {
         }
         response.setRemark(movement.getRemark());
         return response;
+    }
+
+    private BigDecimal nz(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
     }
 }

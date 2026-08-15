@@ -8,6 +8,8 @@ public class StockSnapshotResponse {
     private String itemCode;
     private String itemName;
     private BigDecimal currentQuantity;
+    private BigDecimal totalCost;
+    private BigDecimal weightedAvgCost;
     private String unit;
     private String lastUpdateTime;
 }

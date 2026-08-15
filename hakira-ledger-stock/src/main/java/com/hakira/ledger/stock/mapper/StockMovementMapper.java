@@ -16,8 +16,8 @@ import java.util.List;
 @Mapper
 public interface StockMovementMapper {
 
-    @Insert("INSERT INTO stock_movement(movement_id, item_code, item_name, direction, quantity, unit, related_voucher_no, movement_date, remark, status, version) " +
-            "VALUES(#{movementId}, #{itemCode}, #{itemName}, #{direction}, #{quantity}, #{unit}, #{relatedVoucherNo}, #{movementDate}, #{remark}, 'ACTIVE', 0)")
+    @Insert("INSERT INTO stock_movement(movement_id, item_code, item_name, direction, quantity, unit_cost, total_cost, unit, related_voucher_no, movement_date, remark, status, version) " +
+            "VALUES(#{movementId}, #{itemCode}, #{itemName}, #{direction}, #{quantity}, #{unitCost}, #{totalCost}, #{unit}, #{relatedVoucherNo}, #{movementDate}, #{remark}, 'ACTIVE', 0)")
     int insert(StockMovement movement);
 
     @Select("<script>" +

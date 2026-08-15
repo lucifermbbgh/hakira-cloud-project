@@ -23,6 +23,10 @@ public class StockMovement {
     private String direction;
     /** 变动数量 */
     private BigDecimal quantity;
+    /** 单价（入库传入/出库=加权平均单价） */
+    private BigDecimal unitCost;
+    /** 本次总成本 */
+    private BigDecimal totalCost;
     /** 单位 */
     private String unit;
     /** 关联凭证号 */
