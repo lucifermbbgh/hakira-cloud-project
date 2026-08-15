@@ -42,6 +42,7 @@ public class StockServiceImpl implements IStockService {
 
     private final StockMovementMapper stockMovementMapper;
     private final StockSnapshotMapper stockSnapshotMapper;
+    private final CostTransferService costTransferService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -119,6 +120,10 @@ public class StockServiceImpl implements IStockService {
         movement.setUnitCost(avgCost);
         movement.setTotalCost(outboundCost);
         stockMovementMapper.insert(movement);
+
+        // 出库成本结转（生成结转凭证：借 6401 主营业务成本 / 贷 1405 库存商品）
+        costTransferService.transferOutboundCost(request.getItemCode(), request.getItemName(),
+                outboundCost, now.toLocalDate());
 
         log.info("出库成功: movementId={}, itemCode={}, quantity={}, 出库成本={}, 当前库存={}",
                 movementId, request.getItemCode(), quantity, outboundCost, snapshot.getCurrentQuantity());
