@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -40,8 +41,11 @@ public class EntryServiceImpl implements IEntryService {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter VOUCHER_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final String STATUS_DRAFT = "DRAFT";
+    private static final String STATUS_PENDING = "PENDING";
     private static final String STATUS_POSTED = "POSTED";
     private static final String STATUS_REVERSED = "REVERSED";
+    private static final String STATUS_VOID = "VOID";
 
     private final JournalEntryMapper journalEntryMapper;
     private final JournalEntryLineMapper journalEntryLineMapper;
@@ -87,7 +91,7 @@ public class EntryServiceImpl implements IEntryService {
         entry.setDescription(request.getDescription());
         entry.setTotalDebit(totalDebit);
         entry.setTotalCredit(totalCredit);
-        entry.setStatus(STATUS_POSTED);
+        entry.setStatus(Boolean.TRUE.equals(request.getDraft()) ? STATUS_DRAFT : STATUS_POSTED);
         journalEntryMapper.insert(entry);
 
         // 5. 写入分录行
@@ -245,6 +249,50 @@ public class EntryServiceImpl implements IEntryService {
 
         log.info("冲销成功: 原凭证={}, 冲销凭证={}", entryId, reverseId);
         return buildResponse(reverse, reverseLines);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public JournalEntryResponse voidEntry(String entryId) {
+        changeStatus(entryId, Set.of(STATUS_POSTED, STATUS_DRAFT), STATUS_VOID);
+        return getEntry(entryId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public JournalEntryResponse submitForApproval(String entryId) {
+        changeStatus(entryId, Set.of(STATUS_DRAFT), STATUS_PENDING);
+        return getEntry(entryId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public JournalEntryResponse approveEntry(String entryId) {
+        changeStatus(entryId, Set.of(STATUS_PENDING), STATUS_POSTED);
+        return getEntry(entryId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public JournalEntryResponse rejectEntry(String entryId) {
+        changeStatus(entryId, Set.of(STATUS_PENDING), STATUS_DRAFT);
+        return getEntry(entryId);
+    }
+
+    /** 通用状态流转（乐观锁）：校验当前状态 → 更新目标状态 */
+    private void changeStatus(String entryId, Set<String> expectedStatuses, String targetStatus) {
+        JournalEntry entry = journalEntryMapper.selectByEntryId(entryId);
+        if (entry == null) {
+            throw new BizException(BizErrorCode.ENTRY_NOT_FOUND, entryId);
+        }
+        if (!expectedStatuses.contains(entry.getStatus())) {
+            throw new BizException(BizErrorCode.ENTRY_STATUS_INVALID,
+                    String.format("凭证 %s 状态为 %s，不允许此操作", entryId, entry.getStatus()));
+        }
+        int updated = journalEntryMapper.updateStatus(entryId, targetStatus, entry.getVersion());
+        if (updated == 0) {
+            throw new BizException(BizErrorCode.DATA_VERSION_CONFLICT, entryId);
+        }
     }
 
     /** 凭证号：未传则自动生成 PZ-YYYYMMDD-NNN */

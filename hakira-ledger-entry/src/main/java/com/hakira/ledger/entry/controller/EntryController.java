@@ -40,4 +40,24 @@ public class EntryController {
         log.info("收到冲销请求: entryId={}", entryId);
         return Result.returnSuccess(entryService.reverseEntry(entryId));
     }
+
+    @PostMapping("/void/{entryId}")
+    public Result<JournalEntryResponse> voidEntry(@PathVariable("entryId") String entryId) {
+        return Result.returnSuccess(entryService.voidEntry(entryId));
+    }
+
+    @PostMapping("/submit/{entryId}")
+    public Result<JournalEntryResponse> submitForApproval(@PathVariable("entryId") String entryId) {
+        return Result.returnSuccess(entryService.submitForApproval(entryId));
+    }
+
+    @PostMapping("/approve/{entryId}")
+    public Result<JournalEntryResponse> approveEntry(@PathVariable("entryId") String entryId) {
+        return Result.returnSuccess(entryService.approveEntry(entryId));
+    }
+
+    @PostMapping("/reject/{entryId}")
+    public Result<JournalEntryResponse> rejectEntry(@PathVariable("entryId") String entryId) {
+        return Result.returnSuccess(entryService.rejectEntry(entryId));
+    }
 }

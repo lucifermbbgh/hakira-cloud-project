@@ -14,6 +14,8 @@ public class JournalEntryRequest {
     private String description;
     /** 分录行列表 */
     private List<EntryLine> entries;
+    /** 是否草稿（true=录入为 DRAFT 待审核，false/null=直接 POSTED） */
+    private Boolean draft;
 
     @Data
     public static class EntryLine {

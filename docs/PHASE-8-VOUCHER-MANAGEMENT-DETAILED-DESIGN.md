@@ -7,13 +7,24 @@
 
 ## 一、凭证状态机
 
-| 状态 | 含义 | 触发 |
-|------|------|------|
-| POSTED | 已记账（录入默认态） | 录入即 POSTED |
-| REVERSED | 已冲销 | 冲销后原分录置此态 |
-| VOID | 已作废（预留） | 后续作废接口 |
+```
+DRAFT(草稿) ──提交──> PENDING(待审) ──通过──> POSTED(已记账)
+   ▲                     │
+   │驳回                  │
+   └─────────────────────┘
+POSTED ──冲销──> REVERSED(已冲销)
+POSTED/DRAFT ──作废──> VOID(已作废)
+```
 
-> DRAFT/PENDING 态留待审核流（对接 Flowable）阶段实现。
+| 状态 | 含义 | 流转接口 |
+|------|------|---------|
+| DRAFT | 草稿（录入 draft=true） | /submit → PENDING |
+| PENDING | 待审核 | /approve → POSTED，/reject → DRAFT |
+| POSTED | 已记账（默认态） | /reverse → REVERSED，/void → VOID |
+| REVERSED | 已冲销 | 只读 |
+| VOID | 已作废 | 只读 |
+
+> 审核流转当前为**本地状态机**（接口驱动），对接 Phase 3 Flowable 审批流引擎后续单独做。
 
 ## 二、冲销设计（reverseEntry）
 
