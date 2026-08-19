@@ -1,0 +1,73 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: hakira-ledger-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # Auth routes — pass through to auth service (login pages, OAuth2)
+        - id: auth-pages
+          uri: lb://hakira-ledger-auth
+          predicates:
+            - Path=/login,/login/**,/oauth2/**,/logout
+          filters:
+            - StripPrefix=0
+        # Auth API — user management (requires JWT)
+        - id: auth-api
+          uri: lb://hakira-ledger-auth
+          predicates:
+            - Path=/user/**
+          filters:
+            - JwtAuth
+        # Entry API
+        - id: entry-api
+          uri: lb://hakira-ledger-entry
+          predicates:
+            - Path=/entry/**
+          filters:
+            - JwtAuth
+        # Stock API
+        - id: stock-api
+          uri: lb://hakira-ledger-stock
+          predicates:
+            - Path=/stock/**
+          filters:
+            - JwtAuth
+        # Config API
+        - id: config-api
+          uri: lb://hakira-ledger-config
+          predicates:
+            - Path=/config/**
+          filters:
+            - JwtAuth
+        # Workflow API
+        - id: workflow-api
+          uri: lb://hakira-ledger-workflow
+          predicates:
+            - Path=/workflow/**
+          filters:
+            - JwtAuth
+        # Task API
+        - id: task-api-route
+          uri: lb://hakira-ledger-task
+          predicates:
+            - Path=/task/**
+          filters:
+            - JwtAuth
+
+# JWT configuration (for gateway validation)
+jwt:
+  secret: hakira-ledger-jwt-secret-key-2024-must-be-at-least-256-bits-long
+  expiration: 86400000  # 24 hours in milliseconds

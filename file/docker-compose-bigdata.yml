@@ -1,0 +1,72 @@
+# ============================================================
+# hakira-cloud-project 大数据分析集群（Phase 6）
+# Flink 集群（1 JobManager + 1 TaskManager）
+# Spark 集群（1 Master + 1 Worker）
+# 注意：hostname 必须用连字符（不含下划线），否则 Java URI/pekko 解析失败
+# ============================================================
+
+services:
+  # ==================== Flink JobManager ====================
+  hakira_ledger_flink_jobmanager:
+    image: flink:1.18.0-scala_2.12
+    container_name: hakira_ledger_flink_jobmanager
+    hostname: flink-jobmanager
+    ports:
+      - "8081:8081"          # JobManager Web UI
+    command: jobmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+      - 'FLINK_PROPERTIES=jobmanager.memory.process.size: 1024m'
+    networks:
+      - hakira_ledger_net
+    restart: unless-stopped
+
+  # ==================== Flink TaskManager ====================
+  hakira_ledger_flink_taskmanager:
+    image: flink:1.18.0-scala_2.12
+    container_name: hakira_ledger_flink_taskmanager
+    hostname: flink-taskmanager
+    command: taskmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+      - 'FLINK_PROPERTIES=taskmanager.numberOfTaskSlots: 2'
+    depends_on:
+      - hakira_ledger_flink_jobmanager
+    networks:
+      - hakira_ledger_net
+    restart: unless-stopped
+
+  # ==================== Spark Master ====================
+  hakira_ledger_spark_master:
+    image: apache/spark:3.5.0
+    container_name: hakira_ledger_spark_master
+    hostname: spark-master
+    ports:
+      - "8080:8080"          # Master Web UI
+      - "7077:7077"          # Master RPC（spark-submit 提交用）
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master --host spark-master --port 7077 --webui-port 8080
+    networks:
+      - hakira_ledger_net
+    restart: unless-stopped
+
+  # ==================== Spark Worker ====================
+  hakira_ledger_spark_worker:
+    image: apache/spark:3.5.0
+    container_name: hakira_ledger_spark_worker
+    hostname: spark-worker
+    environment:
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=2g
+      - SPARK_NO_DAEMONIZE=true
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077 --cores 2 --memory 2g
+    depends_on:
+      - hakira_ledger_spark_master
+    networks:
+      - hakira_ledger_net
+    restart: unless-stopped
+
+networks:
+  hakira_ledger_net:
+    external: true

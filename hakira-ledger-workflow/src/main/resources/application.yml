@@ -1,0 +1,21 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: hakira-ledger-workflow
+  datasource:
+    url: jdbc:h2:mem:flowable;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+flowable:
+  # 自动部署 processes/ 目录下的 BPMN 文件
+  process-definition-location-prefix: classpath:/processes/
+  # 关闭异步执行器（开发环境简化）
+  async-executor-activate: false

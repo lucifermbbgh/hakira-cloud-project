@@ -1,0 +1,10 @@
+#####MYSQL CONNECT CONFIG#####
+hakira:
+  db:
+    host: localhost:3307
+    username: root
+    password: root
+  nacos:
+    host: localhost:8848
+    username: nacos
+    password: nacos
